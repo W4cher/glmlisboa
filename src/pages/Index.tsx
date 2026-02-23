@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { load, save, Devedor, Negocio, Tese, Tarefa, Financas, DEFAULT_TESE, DEFAULT_NEGOCIOS } from "@/lib/garcia";
 import TabRotina from "@/components/garcia/TabRotina";
 import TabTarefas from "@/components/garcia/TabTarefas";
@@ -6,6 +7,7 @@ import TabDevedores from "@/components/garcia/TabDevedores";
 import TabNegocios from "@/components/garcia/TabNegocios";
 import TabTese from "@/components/garcia/TabTese";
 import TabFinancas from "@/components/garcia/TabFinancas";
+import AuthPage from "@/pages/Auth";
 
 const tabs = [
   { id: "rotina", icon: "⏰", label: "Rotina" },
@@ -19,6 +21,8 @@ const tabs = [
 export default function Index() {
   const [tab, setTab] = useState("rotina");
   const [loaded, setLoaded] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [devedores, setDevedores] = useState<Devedor[]>([]);
   const [negocios, setNegocios] = useState<Record<string, Negocio>>(DEFAULT_NEGOCIOS);
@@ -27,22 +31,70 @@ export default function Index() {
   const [rotinaDia, setRotinaDia] = useState<Record<string, Record<string, boolean>>>({});
   const [finanas, setFinanas] = useState<Financas>({ entradas: [], saidas: [] });
 
-  useEffect(() => {
-    const d = load<Devedor[]>("garcia:devedores"); if (d) setDevedores(d);
-    const n = load<Record<string, Negocio>>("garcia:negocios"); if (n) setNegocios(n);
-    const t = load<Tese>("garcia:tese"); if (t) setTese(t);
-    const tk = load<Tarefa[]>("garcia:tarefas"); if (tk) setTarefas(tk);
-    const rd = load<Record<string, Record<string, boolean>>>("garcia:rotina"); if (rd) setRotinaDia(rd);
-    const fi = load<Financas>("garcia:finanas"); if (fi) setFinanas(fi);
-    setLoaded(true);
+  // Debounce saves
+  const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const debouncedSave = useCallback((key: string, val: any) => {
+    if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+    saveTimers.current[key] = setTimeout(() => save(key, val), 500);
   }, []);
 
-  useEffect(() => { if (loaded) save("garcia:devedores", devedores); }, [devedores, loaded]);
-  useEffect(() => { if (loaded) save("garcia:negocios", negocios); }, [negocios, loaded]);
-  useEffect(() => { if (loaded) save("garcia:tese", tese); }, [tese, loaded]);
-  useEffect(() => { if (loaded) save("garcia:tarefas", tarefas); }, [tarefas, loaded]);
-  useEffect(() => { if (loaded) save("garcia:rotina", rotinaDia); }, [rotinaDia, loaded]);
-  useEffect(() => { if (loaded) save("garcia:finanas", finanas); }, [finanas, loaded]);
+  // Auth listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+      setAuthChecked(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load data when user is available
+  useEffect(() => {
+    if (!user) { setLoaded(false); return; }
+    (async () => {
+      const [d, n, t, tk, rd, fi] = await Promise.all([
+        load<Devedor[]>("garcia:devedores"),
+        load<Record<string, Negocio>>("garcia:negocios"),
+        load<Tese>("garcia:tese"),
+        load<Tarefa[]>("garcia:tarefas"),
+        load<Record<string, Record<string, boolean>>>("garcia:rotina"),
+        load<Financas>("garcia:finanas"),
+      ]);
+      if (d) setDevedores(d);
+      if (n) setNegocios(n);
+      if (t) setTese(t);
+      if (tk) setTarefas(tk);
+      if (rd) setRotinaDia(rd);
+      if (fi) setFinanas(fi);
+      setLoaded(true);
+    })();
+  }, [user]);
+
+  // Auto-save on changes
+  useEffect(() => { if (loaded) debouncedSave("garcia:devedores", devedores); }, [devedores, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:negocios", negocios); }, [negocios, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:tese", tese); }, [tese, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:tarefas", tarefas); }, [tarefas, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:rotina", rotinaDia); }, [rotinaDia, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:finanas", finanas); }, [finanas, loaded, debouncedSave]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setLoaded(false);
+    setDevedores([]);
+    setNegocios(DEFAULT_NEGOCIOS);
+    setTese(DEFAULT_TESE);
+    setTarefas([]);
+    setRotinaDia({});
+    setFinanas({ entradas: [], saidas: [] });
+  };
+
+  if (!authChecked) return (
+    <div className="bg-background min-h-screen flex items-center justify-center">
+      <div className="text-primary text-2xl font-mono">A carregar...</div>
+    </div>
+  );
+
+  if (!user) return <AuthPage />;
 
   if (!loaded) return (
     <div className="bg-background min-h-screen flex items-center justify-center">
@@ -62,9 +114,12 @@ export default function Index() {
             {new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
           </div>
         </div>
-        <div className="ml-auto flex gap-1.5">
+        <div className="ml-auto flex gap-1.5 items-center">
           <MiniStat label="Cobranças" value={devedores.filter(d => !d.pago).length} color="hsl(var(--garcia-red))" />
           <MiniStat label="Tarefas" value={tarefas.filter(t => !t.feito).length} color="hsl(var(--garcia-gold))" />
+          <button onClick={handleLogout} className="ml-2 text-muted-foreground hover:text-foreground text-xs bg-garcia-surface-hi border border-border rounded-lg px-3 py-1.5 transition-colors">
+            Sair
+          </button>
         </div>
       </div>
 
