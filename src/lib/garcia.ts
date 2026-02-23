@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 // ── Types ──
 export interface Devedor {
   id: string; nome: string; valor: number; produto: string; data: string; notas: string; pago: boolean;
@@ -31,16 +33,38 @@ export const fmt = (n: number) =>
 export const today = () => new Date().toISOString().split("T")[0];
 export const uid = () => Math.random().toString(36).slice(2, 8);
 
-// ── Storage ──
-export const load = <T>(key: string): T | null => {
+// ── Cloud Storage (Supabase) ──
+export const load = async <T>(key: string): Promise<T | null> => {
   try {
-    const r = localStorage.getItem(key);
-    return r ? JSON.parse(r) : null;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from("user_data")
+      .select("data_value")
+      .eq("user_id", user.id)
+      .eq("data_key", key)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.data_value as T;
   } catch { return null; }
 };
 
-export const save = <T>(key: string, val: T) => {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+export const save = async <T>(key: string, val: T) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from("user_data")
+      .upsert({
+        user_id: user.id,
+        data_key: key,
+        data_value: val as any,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id,data_key" });
+  } catch {}
 };
 
 // ── Constants ──
