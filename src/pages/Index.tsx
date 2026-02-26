@@ -142,7 +142,7 @@ export default function Index() {
       <div className="max-w-[900px] mx-auto p-5">
         {tab === "rotina" && <TabRotina rotinaDia={rotinaDia} setRotinaDia={setRotinaDia} />}
         {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} />}
-        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} />}
+        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} />}
         {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} />}
         {tab === "tese" && <TabTese tese={tese} setTese={setTese} />}
         {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} />}

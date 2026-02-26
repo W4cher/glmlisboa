@@ -1,11 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ──
+export interface LogEntry {
+  id: string; tipo: string; negocio: string;
+  descricao: string; valor: number; custo: number; lucroVenda: number;
+  cliente: string; qty: number; data: string; registadoEm: string;
+}
+export interface Pagamento {
+  id: string; valor: number; data: string;
+}
 export interface Devedor {
-  id: string; nome: string; valor: number; produto: string; data: string; notas: string; pago: boolean;
+  id: string; nome: string; valor: number; valorOriginal: number; produto: string; data: string; notas: string; pago: boolean; negocio: string; pagamentos: Pagamento[];
 }
 export interface Negocio {
-  receita: number; gastos: number; meta: number; notas: string; proxima?: string;
+  receita: number; gastos: number; meta: number; notas: string; proxima?: string; log: LogEntry[];
 }
 export interface Capitulo {
   id: string; nome: string; progresso: number;
@@ -119,8 +127,10 @@ export const DEFAULT_TESE: Tese = {
 };
 
 export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {
-  smartphone: { receita: 0, gastos: 0, meta: 0, notas: "" },
-  sobrilho: { receita: 0, gastos: 0, meta: 0, notas: "" },
-  roupas: { receita: 0, gastos: 0, meta: 0, notas: "" },
-  rendas: { receita: 0, gastos: 0, meta: 0, notas: "", proxima: "" },
+  smartphone: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
+  sobrilho: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
+  roupas: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
+  rendas: { receita: 0, gastos: 0, meta: 0, notas: "", proxima: "", log: [] },
 };
+
+export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
