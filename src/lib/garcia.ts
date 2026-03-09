@@ -12,8 +12,18 @@ export interface Pagamento {
 export interface Devedor {
   id: string; nome: string; valor: number; valorOriginal: number; produto: string; data: string; notas: string; pago: boolean; negocio: string; pagamentos: Pagamento[];
 }
+export interface StockItem {
+  id: string;
+  nome: string;
+  quantidade: number;
+  custoUnitario: number;
+  precoVenda: number;
+}
 export interface Negocio {
-  receita: number; gastos: number; meta: number; notas: string; proxima?: string; log: LogEntry[];
+  receita: number; gastos: number; meta: number; notas: string; proxima?: string; log: LogEntry[]; stock: StockItem[];
+}
+export interface NegocioCfg {
+  id: string; icon: string; nome: string; desc: string;
 }
 export interface Capitulo {
   id: string; nome: string; progresso: number;
@@ -40,6 +50,20 @@ export const fmt = (n: number) =>
 
 export const today = () => new Date().toISOString().split("T")[0];
 export const uid = () => Math.random().toString(36).slice(2, 8);
+export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
+
+/** Enforce log limits: max 7 entries, auto-clean entries older than 7 days */
+export const enforceLogLimits = (log: LogEntry[]): LogEntry[] => {
+  // Remove entries older than 7 days
+  let filtered = log.filter(e => diasAtras(e.data) < 7);
+  // Keep only the 7 most recent
+  if (filtered.length > 7) {
+    filtered = filtered
+      .sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime())
+      .slice(0, 7);
+  }
+  return filtered;
+};
 
 // ── Cloud Storage (Supabase) ──
 export const load = async <T>(key: string): Promise<T | null> => {
@@ -106,12 +130,22 @@ export const BLOCO_COLORS: Record<string, string> = {
   "Noite": "hsl(var(--garcia-indigo))",
 };
 
-export const NEGOCIOS_CFG = [
+export const DEFAULT_NEGOCIOS_CFG: NegocioCfg[] = [
   { id: "smartphone", icon: "📱", nome: "Smart X Phone", desc: "Vendas de telemóveis" },
   { id: "sobrilho", icon: "🚗", nome: "Sobrilho", desc: "Pintura automóvel" },
   { id: "roupas", icon: "👗", nome: "Roupas (esposa)", desc: "Vendas de roupa" },
   { id: "rendas", icon: "🏠", nome: "Rendas", desc: "Propriedades arrendadas" },
 ];
+
+// Keep old export for backward compat
+export const NEGOCIOS_CFG = DEFAULT_NEGOCIOS_CFG;
+
+export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {
+  smartphone: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
+  sobrilho: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
+  roupas: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
+  rendas: { receita: 0, gastos: 0, meta: 0, notas: "", proxima: "", log: [], stock: [] },
+};
 
 export const DEFAULT_TESE: Tese = {
   titulo: "Blockchain-Secured FL for Trustworthy Edge Intelligence",
@@ -126,11 +160,4 @@ export const DEFAULT_TESE: Tese = {
   tarefas: [],
 };
 
-export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {
-  smartphone: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
-  sobrilho: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
-  roupas: { receita: 0, gastos: 0, meta: 0, notas: "", log: [] },
-  rendas: { receita: 0, gastos: 0, meta: 0, notas: "", proxima: "", log: [] },
-};
-
-export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
+export const NEGOCIO_ICONS = ["📱", "🚗", "👗", "🏠", "💻", "🎨", "🍽️", "🏪", "🛒", "✂️", "📦", "🔧", "🎵", "📸", "💈", "🏗️", "🧹", "🌱"];

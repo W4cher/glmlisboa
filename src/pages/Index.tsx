@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { load, save, Devedor, Negocio, Tese, Tarefa, Financas, DEFAULT_TESE, DEFAULT_NEGOCIOS } from "@/lib/garcia";
+import { load, save, Devedor, Negocio, NegocioCfg, Tese, Tarefa, Financas, DEFAULT_TESE, DEFAULT_NEGOCIOS, DEFAULT_NEGOCIOS_CFG, fmt } from "@/lib/garcia";
 import TabRotina from "@/components/garcia/TabRotina";
 import TabTarefas from "@/components/garcia/TabTarefas";
 import TabDevedores from "@/components/garcia/TabDevedores";
@@ -9,7 +9,7 @@ import TabTese from "@/components/garcia/TabTese";
 import TabFinancas from "@/components/garcia/TabFinancas";
 import AuthPage from "@/pages/Auth";
 
-const tabs = [
+const DEFAULT_TABS = [
   { id: "rotina", icon: "⏰", label: "Rotina" },
   { id: "tarefas", icon: "✅", label: "Tarefas" },
   { id: "devedores", icon: "💰", label: "Cobranças" },
@@ -26,6 +26,7 @@ export default function Index() {
 
   const [devedores, setDevedores] = useState<Devedor[]>([]);
   const [negocios, setNegocios] = useState<Record<string, Negocio>>(DEFAULT_NEGOCIOS);
+  const [negociosCfg, setNegociosCfg] = useState<NegocioCfg[]>(DEFAULT_NEGOCIOS_CFG);
   const [tese, setTese] = useState<Tese>(DEFAULT_TESE);
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [rotinaDia, setRotinaDia] = useState<Record<string, Record<string, boolean>>>({});
@@ -51,9 +52,10 @@ export default function Index() {
   useEffect(() => {
     if (!user) { setLoaded(false); return; }
     (async () => {
-      const [d, n, t, tk, rd, fi] = await Promise.all([
+      const [d, n, nc, t, tk, rd, fi] = await Promise.all([
         load<Devedor[]>("garcia:devedores"),
         load<Record<string, Negocio>>("garcia:negocios"),
+        load<NegocioCfg[]>("garcia:negocios_cfg"),
         load<Tese>("garcia:tese"),
         load<Tarefa[]>("garcia:tarefas"),
         load<Record<string, Record<string, boolean>>>("garcia:rotina"),
@@ -61,6 +63,7 @@ export default function Index() {
       ]);
       if (d) setDevedores(d);
       if (n) setNegocios(n);
+      if (nc) setNegociosCfg(nc);
       if (t) setTese(t);
       if (tk) setTarefas(tk);
       if (rd) setRotinaDia(rd);
@@ -72,6 +75,7 @@ export default function Index() {
   // Auto-save on changes
   useEffect(() => { if (loaded) debouncedSave("garcia:devedores", devedores); }, [devedores, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:negocios", negocios); }, [negocios, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:negocios_cfg", negociosCfg); }, [negociosCfg, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:tese", tese); }, [tese, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:tarefas", tarefas); }, [tarefas, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:rotina", rotinaDia); }, [rotinaDia, loaded, debouncedSave]);
@@ -82,6 +86,7 @@ export default function Index() {
     setLoaded(false);
     setDevedores([]);
     setNegocios(DEFAULT_NEGOCIOS);
+    setNegociosCfg(DEFAULT_NEGOCIOS_CFG);
     setTese(DEFAULT_TESE);
     setTarefas([]);
     setRotinaDia({});
@@ -125,7 +130,7 @@ export default function Index() {
 
       {/* Nav */}
       <div className="flex overflow-x-auto bg-card border-b border-border px-3">
-        {tabs.map(t => (
+        {DEFAULT_TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="px-4 py-3 bg-transparent border-none cursor-pointer text-[13px] whitespace-nowrap transition-all flex items-center gap-1.5"
             style={{
@@ -142,8 +147,8 @@ export default function Index() {
       <div className="max-w-[900px] mx-auto p-5">
         {tab === "rotina" && <TabRotina rotinaDia={rotinaDia} setRotinaDia={setRotinaDia} />}
         {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} />}
-        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} />}
-        {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} />}
+        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} />}
+        {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} setNegociosCfg={setNegociosCfg} />}
         {tab === "tese" && <TabTese tese={tese} setTese={setTese} />}
         {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} />}
       </div>
