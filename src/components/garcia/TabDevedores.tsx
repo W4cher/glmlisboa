@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Devedor, Negocio, LogEntry, NEGOCIOS_CFG, uid, today, fmt } from "@/lib/garcia";
+import { Devedor, Negocio, NegocioCfg, LogEntry, enforceLogLimits, uid, today, fmt } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 
 interface Props {
@@ -7,15 +7,16 @@ interface Props {
   setDevedores: (v: Devedor[] | ((prev: Devedor[]) => Devedor[])) => void;
   negocios: Record<string, Negocio>;
   setNegocios: (v: Record<string, Negocio> | ((prev: Record<string, Negocio>) => Record<string, Negocio>)) => void;
+  negociosCfg: NegocioCfg[];
 }
 
-export default function TabDevedores({ devedores, setDevedores, negocios, setNegocios }: Props) {
-  const [form, setForm] = useState({ nome: "", valor: "", produto: "", data: today(), notas: "", negocio: "smartphone" });
+export default function TabDevedores({ devedores, setDevedores, negocios, setNegocios, negociosCfg }: Props) {
+  const [form, setForm] = useState({ nome: "", valor: "", produto: "", data: today(), notas: "", negocio: negociosCfg[0]?.id || "" });
   const [showForm, setShowForm] = useState(false);
   const [pagandoId, setPagandoId] = useState<string | null>(null);
   const [valorPagamento, setValorPagamento] = useState("");
 
-  const negocioOptions = [...NEGOCIOS_CFG.map(n => n.id), "outro"];
+  const negocioOptions = [...negociosCfg.map(n => n.id), "outro"];
 
   const add = () => {
     if (!form.nome || !form.valor) return;
@@ -25,7 +26,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
       produto: form.produto, data: form.data, notas: form.notas,
       pago: false, negocio: form.negocio, pagamentos: [],
     }]);
-    setForm({ nome: "", valor: "", produto: "", data: today(), notas: "", negocio: "smartphone" });
+    setForm({ nome: "", valor: "", produto: "", data: today(), notas: "", negocio: negociosCfg[0]?.id || "" });
     setShowForm(false);
   };
 
@@ -37,9 +38,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
     const novoPagamento = { id: uid(), valor: montante, data: today() };
 
     setDevedores(prev => prev.map(d => d.id === devedor.id ? {
-      ...d,
-      valor: Math.max(0, restante),
-      pago,
+      ...d, valor: Math.max(0, restante), pago,
       pagamentos: [...(d.pagamentos || []), novoPagamento],
     } : d));
 
@@ -52,13 +51,12 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
         registadoEm: new Date().toISOString(),
       };
       setNegocios(prev => {
-        const n = prev[devedor.negocio] || { receita: 0, gastos: 0, meta: 0, notas: "", log: [] };
+        const n = prev[devedor.negocio] || { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] };
         return {
           ...prev,
           [devedor.negocio]: {
-            ...n,
-            receita: n.receita + montante,
-            log: [...(n.log || []), entrada],
+            ...n, receita: n.receita + montante,
+            log: enforceLogLimits([...(n.log || []), entrada]),
           }
         };
       });
@@ -73,6 +71,8 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
   const pendentes = devedores.filter(d => !d.pago);
   const pagos = devedores.filter(d => d.pago);
   const totalPendente = pendentes.reduce((s, d) => s + (d.valor || 0), 0);
+
+  const getNegLabel = (id: string) => negociosCfg.find(n => n.id === id)?.nome || id;
 
   return (
     <div>
@@ -108,6 +108,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
         {pendentes.length === 0 && <Empty msg="Sem cobranças pendentes 💚" />}
         {pendentes.map(d => (
           <DevedorRow key={d.id} d={d}
+            negLabel={getNegLabel(d.negocio)}
             onPagar={() => setPagandoId(pagandoId === d.id ? null : d.id)}
             onDel={() => del(d.id)}
             isPagando={pagandoId === d.id}
@@ -123,7 +124,8 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
           <summary className="text-muted-foreground cursor-pointer mb-2">Recebidos ({pagos.length}) — {fmt(pagos.reduce((s, d) => s + (d.valorOriginal || d.valor), 0))}</summary>
           <div className="flex flex-col gap-1.5">
             {pagos.map(d => (
-              <DevedorRow key={d.id} d={d} onPagar={() => {}} onDel={() => del(d.id)} done
+              <DevedorRow key={d.id} d={d} negLabel={getNegLabel(d.negocio)}
+                onPagar={() => {}} onDel={() => del(d.id)} done
                 isPagando={false} valorPagamento="" setValorPagamento={() => {}} onConfirmarPagamento={() => {}} />
             ))}
           </div>
@@ -133,13 +135,12 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
   );
 }
 
-function DevedorRow({ d, onPagar, onDel, done = false, isPagando, valorPagamento, setValorPagamento, onConfirmarPagamento }: {
-  d: Devedor; onPagar: () => void; onDel: () => void; done?: boolean;
+function DevedorRow({ d, negLabel, onPagar, onDel, done = false, isPagando, valorPagamento, setValorPagamento, onConfirmarPagamento }: {
+  d: Devedor; negLabel: string; onPagar: () => void; onDel: () => void; done?: boolean;
   isPagando: boolean; valorPagamento: string; setValorPagamento: (v: string) => void; onConfirmarPagamento: () => void;
 }) {
   const dias = Math.floor((Date.now() - new Date(d.data).getTime()) / 86400000);
   const urgente = dias > 30 && !done;
-  const negLabel = NEGOCIOS_CFG.find(n => n.id === d.negocio)?.nome || d.negocio;
 
   return (
     <div className="bg-card rounded-lg px-4 py-3" style={{
