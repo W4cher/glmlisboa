@@ -19,16 +19,25 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
   const [form, setForm] = useState({ nome: "", quantidade: "", custoUnitario: "", precoVenda: "" });
   const [sellId, setSellId] = useState<string | null>(null);
   const [sellQty, setSellQty] = useState("1");
+  const [addQtyId, setAddQtyId] = useState<string | null>(null);
+  const [addQtyVal, setAddQtyVal] = useState("1");
 
   const addItem = () => {
     if (!form.nome || !form.quantidade || !form.precoVenda) return;
-    onAdd({
-      id: uid(),
-      nome: form.nome,
-      quantidade: parseInt(form.quantidade) || 0,
-      custoUnitario: parseFloat(form.custoUnitario) || 0,
-      precoVenda: parseFloat(form.precoVenda) || 0,
-    });
+    // Check if product with same name already exists
+    const existing = stock.find(s => s.nome.toLowerCase().trim() === form.nome.toLowerCase().trim());
+    if (existing) {
+      // Just increase quantity of existing product
+      onUpdate(existing.id, { quantidade: existing.quantidade + (parseInt(form.quantidade) || 0) });
+    } else {
+      onAdd({
+        id: uid(),
+        nome: form.nome,
+        quantidade: parseInt(form.quantidade) || 0,
+        custoUnitario: parseFloat(form.custoUnitario) || 0,
+        precoVenda: parseFloat(form.precoVenda) || 0,
+      });
+    }
     setForm({ nome: "", quantidade: "", custoUnitario: "", precoVenda: "" });
     setShowAdd(false);
   };
@@ -38,6 +47,14 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
     onSell(item, qty);
     setSellId(null);
     setSellQty("1");
+  };
+
+  const handleAddQty = (item: StockItem) => {
+    const qty = parseInt(addQtyVal) || 1;
+    if (qty <= 0) return;
+    onUpdate(item.id, { quantidade: item.quantidade + qty });
+    setAddQtyId(null);
+    setAddQtyVal("1");
   };
 
   return (
@@ -63,6 +80,11 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
             <GInput label="Custo unitário (AOA)" value={form.custoUnitario} onChange={v => setForm({ ...form, custoUnitario: v })} type="number" placeholder="0" />
             <GInput label="Preço de venda (AOA)*" value={form.precoVenda} onChange={v => setForm({ ...form, precoVenda: v })} type="number" placeholder="0" />
           </div>
+          {stock.find(s => s.nome.toLowerCase().trim() === form.nome.toLowerCase().trim()) && (
+            <div className="mt-2 text-[12px] text-garcia-gold font-medium">
+              ⚠️ Produto já existe — a quantidade será adicionada ao existente
+            </div>
+          )}
           <div className="mt-3 flex gap-2">
             <GBtn onClick={addItem} color="hsl(var(--garcia-blue))">Adicionar</GBtn>
             <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--muted))">Cancelar</GBtn>
@@ -88,10 +110,18 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
                     </div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
-                    <GBtn onClick={() => setSellId(sellId === item.id ? null : item.id)} color="hsl(var(--garcia-green))" small>Vender</GBtn>
+                    <GBtn onClick={() => { setAddQtyId(addQtyId === item.id ? null : item.id); setSellId(null); }} color="hsl(var(--garcia-blue))" small>+</GBtn>
+                    <GBtn onClick={() => { setSellId(sellId === item.id ? null : item.id); setAddQtyId(null); }} color="hsl(var(--garcia-green))" small>Vender</GBtn>
                     <GBtn onClick={() => onDelete(item.id)} color="hsl(var(--garcia-red))" small>×</GBtn>
                   </div>
                 </div>
+                {addQtyId === item.id && (
+                  <div className="mt-2 flex gap-2 items-end border-t border-border pt-2">
+                    <GInput label="Adicionar quantidade" value={addQtyVal} onChange={setAddQtyVal} type="number" placeholder="1" />
+                    <GBtn onClick={() => handleAddQty(item)} color="hsl(var(--garcia-blue))">Confirmar</GBtn>
+                    <GBtn onClick={() => setAddQtyId(null)} color="hsl(var(--muted))">Cancelar</GBtn>
+                  </div>
+                )}
                 {sellId === item.id && (
                   <div className="mt-2 flex gap-2 items-end border-t border-border pt-2">
                     <GInput label={`Quantidade (max: ${item.quantidade})`} value={sellQty} onChange={setSellQty} type="number" placeholder="1" />
