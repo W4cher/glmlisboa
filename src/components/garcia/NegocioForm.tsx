@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NegocioCfg, NEGOCIO_ICONS, uid } from "@/lib/garcia";
 import { GCard, GInput, GBtn } from "./SharedComponents";
+import { Icon } from "@/lib/icons";
 
 interface Props {
   onAdd: (cfg: NegocioCfg) => void;
@@ -10,28 +11,29 @@ interface Props {
 export default function NegocioForm({ onAdd, onCancel }: Props) {
   const [nome, setNome] = useState("");
   const [desc, setDesc] = useState("");
-  const [icon, setIcon] = useState("📦");
+  const [icon, setIcon] = useState("package");
 
   const submit = () => {
     if (!nome.trim()) return;
     onAdd({ id: uid(), icon, nome: nome.trim(), desc: desc.trim() });
     setNome("");
     setDesc("");
-    setIcon("📦");
+    setIcon("package");
   };
 
   return (
     <GCard className="mb-5">
-      <div className="font-semibold text-sm mb-3">➕ Criar novo negócio</div>
+      <div className="font-semibold text-sm mb-3">Criar novo negócio</div>
       <div className="flex gap-2 mb-3 flex-wrap">
         {NEGOCIO_ICONS.map(ic => (
           <button key={ic} onClick={() => setIcon(ic)}
-            className="w-9 h-9 rounded-lg text-lg flex items-center justify-center cursor-pointer transition-all border"
+            className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all border"
             style={{
               background: icon === ic ? "hsl(var(--garcia-accent-soft))" : "hsl(var(--garcia-surface-hi))",
               borderColor: icon === ic ? "hsl(var(--primary))" : "hsl(var(--border))",
+              color: icon === ic ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
             }}>
-            {ic}
+            <Icon name={ic} size={18} />
           </button>
         ))}
       </div>

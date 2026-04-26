@@ -34,6 +34,14 @@ export interface TeseTarefa {
 export interface Tese {
   titulo: string; capitulos: Capitulo[]; tarefas: TeseTarefa[];
 }
+export interface AprendizadoTopico {
+  id: string; texto: string; feito: boolean;
+}
+export interface AprendizadoArea {
+  id: string; nome: string; icon: string; objetivo: string;
+  topicos: AprendizadoTopico[];
+  notas: string;
+}
 export interface Tarefa {
   id: string; texto: string; prioridade: string; categoria: string; prazo: string; feito: boolean; criada: string;
 }
@@ -43,20 +51,27 @@ export interface FinItem {
 export interface Financas {
   entradas: FinItem[]; saidas: FinItem[];
 }
+export interface BlocoRotina {
+  id: string; hora: string; label: string; bloco: string; icon?: string;
+}
+export interface Configuracoes {
+  nome: string;
+  notificacoesAtivas: boolean;
+  ocultarValores: boolean;
+}
 
 // ── Helpers ──
 export const fmt = (n: number) =>
   new Intl.NumberFormat("pt-PT", { style: "currency", currency: "AOA" }).format(n);
 
+export const fmtMasked = (n: number, oculto: boolean) => oculto ? "••••••" : fmt(n);
+
 export const today = () => new Date().toISOString().split("T")[0];
 export const uid = () => Math.random().toString(36).slice(2, 8);
 export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
 
-/** Enforce log limits: max 7 entries, auto-clean entries older than 7 days */
 export const enforceLogLimits = (log: LogEntry[]): LogEntry[] => {
-  // Remove entries older than 7 days
   let filtered = log.filter(e => diasAtras(e.data) < 7);
-  // Keep only the 7 most recent
   if (filtered.length > 7) {
     filtered = filtered
       .sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime())
@@ -70,14 +85,12 @@ export const load = async <T>(key: string): Promise<T | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-
     const { data, error } = await supabase
       .from("user_data")
       .select("data_value")
       .eq("user_id", user.id)
       .eq("data_key", key)
       .maybeSingle();
-
     if (error || !data) return null;
     return data.data_value as T;
   } catch { return null; }
@@ -87,7 +100,6 @@ export const save = async <T>(key: string, val: T) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     await supabase
       .from("user_data")
       .upsert({
@@ -100,44 +112,46 @@ export const save = async <T>(key: string, val: T) => {
 };
 
 // ── Constants ──
-export const PRIORIDADES = ["🔴 Urgente", "🟡 Importante", "🟢 Normal"];
-export const CATEGORIAS_T = ["Bosch", "Tese", "Smart X Phone", "Sobrilho", "Finanças", "Família", "TikTok", "Outro"];
+export const PRIORIDADES = ["Urgente", "Importante", "Normal"];
+export const CATEGORIAS_T = ["Bosch", "Aprendizado", "Smart X Phone", "Sobrilho", "Finanças", "Família", "TikTok", "Outro"];
 export const CATS_ENTRADA = ["Bosch/Salário", "Smart X Phone", "Sobrilho", "Roupas", "Rendas", "TikTok", "Outro"];
 export const CATS_SAIDA = ["Casa", "Alimentação", "Escola filhos", "Ginásio", "Negócios", "Transporte", "Pessoal", "Outro"];
 
-export const BLOCOS_ROTINA = [
-  { id: "b1", hora: "07:00", label: "Acordar + café + plano do dia", icon: "🌅", bloco: "Manhã" },
-  { id: "b2", hora: "07:30", label: "Preparar filhos → escola às 8:20", icon: "👨‍👧‍👦", bloco: "Manhã" },
-  { id: "b3", hora: "08:30", label: "Bosch API — trabalho principal", icon: "💻", bloco: "Trabalho" },
-  { id: "b4", hora: "12:30", label: "Bloco negócios rápido (30min)", icon: "📱", bloco: "Trabalho" },
-  { id: "b5", hora: "13:00", label: "Almoço + descanso", icon: "🍽️", bloco: "Pausa" },
-  { id: "b6", hora: "14:00", label: "TESE — foco total (sem telemóvel)", icon: "🎓", bloco: "Tese" },
-  { id: "b7", hora: "17:00", label: "Ginásio", icon: "💪", bloco: "Pessoal" },
-  { id: "b8", hora: "18:00", label: "Buscar filhos + família", icon: "❤️", bloco: "Família" },
-  { id: "b9", hora: "21:45", label: "Finanças + cobranças", icon: "💰", bloco: "Noite" },
-  { id: "b10", hora: "22:15", label: "Marketing criativo (criativos, redes sociais)", icon: "🎨", bloco: "Noite" },
-  { id: "b11", hora: "23:00", label: "Revisão do dia + plano amanhã", icon: "📋", bloco: "Noite" },
-  { id: "b12", hora: "23:30", label: "Desligar — esperar mulher sem stress", icon: "🌙", bloco: "Noite" },
+export const DEFAULT_BLOCOS_ROTINA: BlocoRotina[] = [
+  { id: "b1", hora: "07:00", label: "Acordar + café + plano do dia", bloco: "Manhã" },
+  { id: "b2", hora: "07:30", label: "Preparar filhos → escola às 8:20", bloco: "Manhã" },
+  { id: "b3", hora: "08:30", label: "Bosch API — trabalho principal", bloco: "Trabalho" },
+  { id: "b4", hora: "12:30", label: "Bloco negócios rápido (30min)", bloco: "Trabalho" },
+  { id: "b5", hora: "13:00", label: "Almoço + descanso", bloco: "Pausa" },
+  { id: "b6", hora: "14:00", label: "Aprendizado — foco total", bloco: "Estudo" },
+  { id: "b7", hora: "17:00", label: "Ginásio", bloco: "Pessoal" },
+  { id: "b8", hora: "18:00", label: "Buscar filhos + família", bloco: "Família" },
+  { id: "b9", hora: "21:45", label: "Finanças + cobranças", bloco: "Noite" },
+  { id: "b10", hora: "22:15", label: "Marketing criativo", bloco: "Noite" },
+  { id: "b11", hora: "23:00", label: "Revisão do dia + plano amanhã", bloco: "Noite" },
+  { id: "b12", hora: "23:30", label: "Desligar — sem stress", bloco: "Noite" },
 ];
+
+export const BLOCOS_ROTINA = DEFAULT_BLOCOS_ROTINA;
 
 export const BLOCO_COLORS: Record<string, string> = {
   "Manhã": "hsl(var(--garcia-gold))",
   "Trabalho": "hsl(var(--garcia-blue))",
   "Pausa": "hsl(var(--garcia-green))",
   "Tese": "hsl(var(--garcia-purple))",
+  "Estudo": "hsl(var(--garcia-purple))",
   "Pessoal": "hsl(var(--primary))",
   "Família": "hsl(var(--garcia-pink))",
   "Noite": "hsl(var(--garcia-indigo))",
 };
 
 export const DEFAULT_NEGOCIOS_CFG: NegocioCfg[] = [
-  { id: "smartphone", icon: "📱", nome: "Smart X Phone", desc: "Vendas de telemóveis" },
-  { id: "sobrilho", icon: "🚗", nome: "Sobrilho", desc: "Pintura automóvel" },
-  { id: "roupas", icon: "👗", nome: "Roupas (esposa)", desc: "Vendas de roupa" },
-  { id: "rendas", icon: "🏠", nome: "Rendas", desc: "Propriedades arrendadas" },
+  { id: "smartphone", icon: "smartphone", nome: "Smart X Phone", desc: "Vendas de telemóveis" },
+  { id: "sobrilho", icon: "car", nome: "Sobrilho", desc: "Pintura automóvel" },
+  { id: "roupas", icon: "shirt", nome: "Roupas (esposa)", desc: "Vendas de roupa" },
+  { id: "rendas", icon: "home", nome: "Rendas", desc: "Propriedades arrendadas" },
 ];
 
-// Keep old export for backward compat
 export const NEGOCIOS_CFG = DEFAULT_NEGOCIOS_CFG;
 
 export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {
@@ -160,4 +174,21 @@ export const DEFAULT_TESE: Tese = {
   tarefas: [],
 };
 
-export const NEGOCIO_ICONS = ["📱", "🚗", "👗", "🏠", "💻", "🎨", "🍽️", "🏪", "🛒", "✂️", "📦", "🔧", "🎵", "📸", "💈", "🏗️", "🧹", "🌱"];
+export const DEFAULT_APRENDIZADO: AprendizadoArea[] = [];
+
+export const DEFAULT_CONFIG: Configuracoes = {
+  nome: "",
+  notificacoesAtivas: false,
+  ocultarValores: false,
+};
+
+export const NEGOCIO_ICONS = [
+  "smartphone", "car", "shirt", "home", "laptop", "palette", "utensils",
+  "store", "shopping-cart", "scissors", "package", "wrench", "music", "camera",
+  "briefcase", "hammer", "sparkles", "leaf",
+];
+
+export const APRENDIZADO_ICONS = [
+  "graduation-cap", "book-open", "brain", "code", "languages", "music",
+  "palette", "calculator", "microscope", "globe", "library", "pencil",
+];

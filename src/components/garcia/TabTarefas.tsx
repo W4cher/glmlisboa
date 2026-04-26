@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Tarefa, uid, today, PRIORIDADES, CATEGORIAS_T } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, Empty } from "./SharedComponents";
+import { CheckSquare, Trash2, Check } from "lucide-react";
 
 interface Props { tarefas: Tarefa[]; setTarefas: (v: Tarefa[]) => void; }
 
 export default function TabTarefas({ tarefas, setTarefas }: Props) {
-  const [form, setForm] = useState({ texto: "", prioridade: "🟡 Importante", categoria: "Outro", prazo: "" });
+  const [form, setForm] = useState({ texto: "", prioridade: "Importante", categoria: "Outro", prazo: "" });
   const [showForm, setShowForm] = useState(false);
 
   const add = () => {
     if (!form.texto.trim()) return;
     setTarefas([...tarefas, { id: uid(), ...form, feito: false, criada: today() }]);
-    setForm({ texto: "", prioridade: "🟡 Importante", categoria: "Outro", prazo: "" });
+    setForm({ texto: "", prioridade: "Importante", categoria: "Outro", prazo: "" });
     setShowForm(false);
   };
   const toggle = (id: string) => setTarefas(tarefas.map(t => t.id === id ? { ...t, feito: !t.feito } : t));
@@ -21,19 +22,19 @@ export default function TabTarefas({ tarefas, setTarefas }: Props) {
   const feitas = tarefas.filter(t => t.feito);
 
   const priColor: Record<string, string> = {
-    "🔴 Urgente": "hsl(var(--garcia-red))",
-    "🟡 Importante": "hsl(var(--garcia-gold))",
-    "🟢 Normal": "hsl(var(--garcia-green))",
+    "Urgente": "hsl(var(--garcia-red))",
+    "Importante": "hsl(var(--garcia-gold))",
+    "Normal": "hsl(var(--garcia-green))",
   };
 
   return (
     <div>
-      <SectionHeader icon="✅" title="Tarefas & Lembretes" sub="Tudo o que tens para fazer" />
+      <SectionHeader icon={<CheckSquare size={22} />} title="Tarefas & Lembretes" sub="Tudo o que tens para fazer" />
       <GBtn onClick={() => setShowForm(!showForm)} color="hsl(var(--primary))">+ Nova Tarefa</GBtn>
 
       {showForm && (
         <GCard className="mt-4 mb-4">
-          <GInput label="O que tens para fazer?" value={form.texto} onChange={v => setForm({ ...form, texto: v })} placeholder="Ex: Ligar ao cliente X para cobrar..." />
+          <GInput label="O que tens para fazer?" value={form.texto} onChange={v => setForm({ ...form, texto: v })} placeholder="Ex: Ligar ao cliente X..." />
           <div className="grid grid-cols-3 gap-3 mt-2.5">
             <GSelect label="Prioridade" value={form.prioridade} onChange={v => setForm({ ...form, prioridade: v })} options={PRIORIDADES} />
             <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={CATEGORIAS_T} />
@@ -50,7 +51,7 @@ export default function TabTarefas({ tarefas, setTarefas }: Props) {
         {pendentes.map(t => (
           <TarefaRow key={t.id} t={t} priColor={priColor[t.prioridade]} onToggle={() => toggle(t.id)} onDel={() => del(t.id)} />
         ))}
-        {pendentes.length === 0 && <Empty msg="Sem tarefas pendentes 🎉" />}
+        {pendentes.length === 0 && <Empty msg="Sem tarefas pendentes" />}
       </div>
 
       {feitas.length > 0 && (
@@ -77,13 +78,15 @@ function TarefaRow({ t, priColor, onToggle, onDel, done = false }: {
         border: `2px solid ${done ? "hsl(var(--garcia-green))" : "hsl(var(--border))"}`,
         background: done ? "hsl(var(--garcia-green))" : "transparent",
       }}>
-        {done && <span style={{ color: "#000", fontSize: 11 }}>✓</span>}
+        {done && <Check size={12} color="#000" strokeWidth={3} />}
       </div>
       <div className="flex-1">
         <div className={`font-semibold text-sm ${done ? "line-through" : ""}`}>{t.texto}</div>
         <div className="text-[11px] text-muted-foreground mt-0.5">{t.categoria} · {t.prioridade}{t.prazo ? ` · Prazo: ${t.prazo}` : ""}</div>
       </div>
-      <button onClick={onDel} className="bg-transparent border-none text-muted-foreground cursor-pointer text-base p-1">×</button>
+      <button onClick={onDel} className="bg-transparent border-none text-muted-foreground hover:text-destructive cursor-pointer p-1">
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }
