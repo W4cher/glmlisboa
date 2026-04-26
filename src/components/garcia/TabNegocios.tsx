@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, fmt, uid, today } from "@/lib/garcia";
-import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard, Empty } from "./SharedComponents";
+import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, fmt, fmtMasked, uid, today } from "@/lib/garcia";
+import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
 import StockSection from "./StockSection";
+import { Icon } from "@/lib/icons";
+import { BarChart3, TrendingUp, TrendingDown, Trash2, Plus } from "lucide-react";
 
 interface Props {
   negocios: Record<string, Negocio>;
   setNegocios: (v: Record<string, Negocio> | ((prev: Record<string, Negocio>) => Record<string, Negocio>)) => void;
   negociosCfg: NegocioCfg[];
   setNegociosCfg: (v: NegocioCfg[] | ((prev: NegocioCfg[]) => NegocioCfg[])) => void;
+  ocultarValores?: boolean;
 }
 
-export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNegociosCfg }: Props) {
+export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNegociosCfg, ocultarValores = false }: Props) {
   const [sel, setSel] = useState(negociosCfg[0]?.id || "");
   const [showForm, setShowForm] = useState(false);
   const [showAddNeg, setShowAddNeg] = useState(false);
@@ -77,49 +80,32 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
     if (sel === id) setSel(negociosCfg.find(x => x.id !== id)?.id || "");
   };
 
-  // Stock handlers
   const addStock = (item: StockItem) => {
-    setNegocios(prev => ({
-      ...prev,
-      [sel]: { ...prev[sel], stock: [...(prev[sel]?.stock || []), item] }
-    }));
+    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: [...(prev[sel]?.stock || []), item] } }));
   };
-
   const updateStock = (itemId: string, updates: Partial<StockItem>) => {
-    setNegocios(prev => ({
-      ...prev,
-      [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).map(s => s.id === itemId ? { ...s, ...updates } : s) }
-    }));
+    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).map(s => s.id === itemId ? { ...s, ...updates } : s) } }));
   };
-
   const delStock = (itemId: string) => {
-    setNegocios(prev => ({
-      ...prev,
-      [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).filter(s => s.id !== itemId) }
-    }));
+    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).filter(s => s.id !== itemId) } }));
   };
-
   const venderStock = (item: StockItem, qty: number) => {
     if (qty <= 0 || qty > item.quantidade) return;
     const valorVenda = item.precoVenda * qty;
     const custoVenda = item.custoUnitario * qty;
-
     const entrada: LogEntry = {
       id: uid(), tipo: "venda", negocio: sel,
-      descricao: `📦 ${item.nome} (stock)`, valor: valorVenda,
+      descricao: `${item.nome} (stock)`, valor: valorVenda,
       custo: custoVenda, lucroVenda: valorVenda - custoVenda,
       cliente: "", qty, data: today(),
       registadoEm: new Date().toISOString(),
     };
-
     setNegocios(prev => {
       const current = prev[sel];
       const newStock = (current?.stock || []).map(s =>
         s.id === item.id ? { ...s, quantidade: s.quantidade - qty } : s
       ).filter(s => s.quantidade > 0);
-
       const currentLog = [...(current?.log || []), entrada];
-
       return {
         ...prev,
         [sel]: {
@@ -138,7 +124,6 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
   const log = enforceLogLimits(n.log || []);
   const stock = n.stock || [];
 
-  // Stock KPIs
   const stockTotal = stock.reduce((s, p) => s + p.quantidade, 0);
   const stockCustoTotal = stock.reduce((s, p) => s + p.custoUnitario * p.quantidade, 0);
   const stockVendaEstimada = stock.reduce((s, p) => s + p.precoVenda * p.quantidade, 0);
@@ -148,45 +133,43 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
   return (
     <div>
-      <SectionHeader icon="📊" title="Negócios" sub="Controlo de todos os teus projetos" />
+      <SectionHeader icon={<BarChart3 size={22} />} title="Negócios" sub="Controlo de todos os teus projetos" />
 
-      {/* Business selector */}
       <div className="flex gap-2 mb-5 flex-wrap items-center">
         {negociosCfg.map(nb => (
-          <button key={nb.id} onClick={() => setSel(nb.id)} className="px-4 py-2 rounded-lg cursor-pointer text-[13px] transition-all" style={{
+          <button key={nb.id} onClick={() => setSel(nb.id)} className="px-3.5 py-2 rounded-lg cursor-pointer text-[13px] transition-all inline-flex items-center gap-2" style={{
             border: `1px solid ${sel === nb.id ? "hsl(var(--primary))" : "hsl(var(--border))"}`,
             background: sel === nb.id ? "hsl(var(--garcia-accent-soft))" : "hsl(var(--card))",
             color: sel === nb.id ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
             fontWeight: sel === nb.id ? 700 : 400,
           }}>
-            {nb.icon} {nb.nome}
+            <Icon name={nb.icon} size={15} /> {nb.nome}
           </button>
         ))}
         <button onClick={() => setShowAddNeg(!showAddNeg)}
-          className="px-3 py-2 rounded-lg cursor-pointer text-[13px] border border-dashed border-muted-foreground text-muted-foreground hover:border-primary hover:text-primary transition-all bg-transparent">
-          + Novo
+          className="px-3 py-2 rounded-lg cursor-pointer text-[13px] border border-dashed border-muted-foreground text-muted-foreground hover:border-primary hover:text-primary transition-all bg-transparent inline-flex items-center gap-1.5">
+          <Plus size={14} /> Novo
         </button>
       </div>
 
-      {/* Add new business form */}
-      {showAddNeg && (
-        <NegocioForm onAdd={addNegocio} onCancel={() => setShowAddNeg(false)} />
-      )}
+      {showAddNeg && <NegocioForm onAdd={addNegocio} onCancel={() => setShowAddNeg(false)} />}
 
-      {sel && selCfg && (
+      {selCfg && (
         <>
-          <GCard>
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-bold text-[17px]">{selCfg.icon} {selCfg.nome}</div>
+          <GCard className="mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <div className="font-bold text-[17px] inline-flex items-center gap-2">
+                <Icon name={selCfg.icon} size={18} /> {selCfg.nome}
+              </div>
               <button onClick={() => delNegocio(sel)}
-                className="text-xs text-muted-foreground hover:text-destructive bg-transparent border border-border rounded-lg px-2.5 py-1 cursor-pointer transition-colors">
-                🗑️ Apagar
+                className="text-xs text-muted-foreground hover:text-destructive bg-transparent border border-border rounded-lg px-2.5 py-1 cursor-pointer transition-colors inline-flex items-center gap-1">
+                <Trash2 size={12} /> Apagar
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-2.5 mb-4">
-              <StatCard label="Receita" value={fmt(n.receita || 0)} color="hsl(var(--garcia-green))" small />
-              <StatCard label="Lucro" value={fmt(lucro)} color={lucro >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"} small />
+              <StatCard label="Receita" value={fmtMasked(n.receita || 0, ocultarValores)} color="hsl(var(--garcia-green))" small />
+              <StatCard label="Lucro" value={fmtMasked(lucro, ocultarValores)} color={lucro >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"} small />
               <StatCard label="Margem" value={`${margem}%`} color={margem >= 30 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-gold))"} small />
             </div>
 
@@ -214,13 +197,16 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
             )}
 
             <div className="flex gap-2 mb-4 flex-wrap">
-              <GBtn onClick={() => { setTipo("venda"); setShowForm(!showForm); }} color="hsl(var(--garcia-green))">+ Venda</GBtn>
-              <GBtn onClick={() => { setTipo("gasto"); setShowForm(!showForm); }} color="hsl(var(--garcia-red))">+ Gasto</GBtn>
+              <GBtn onClick={() => { setTipo("venda"); setShowForm(!showForm); }} color="hsl(var(--garcia-green))"><TrendingUp size={14} /> Venda</GBtn>
+              <GBtn onClick={() => { setTipo("gasto"); setShowForm(!showForm); }} color="hsl(var(--garcia-red))"><TrendingDown size={14} /> Gasto</GBtn>
             </div>
 
             {showForm && (
               <GCard className="mb-4">
-                <div className="font-semibold text-sm mb-3">{tipo === "venda" ? "📈 Registar Venda" : "📉 Registar Gasto"}</div>
+                <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2">
+                  {tipo === "venda" ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  {tipo === "venda" ? "Registar Venda" : "Registar Gasto"}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: iPhone 13" />
                   <GInput label="Valor unitário (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
@@ -242,20 +228,19 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
               className="w-full bg-garcia-surface-hi border border-border rounded-lg text-foreground px-3 py-2.5 text-[13px] min-h-[80px] resize-y" />
           </GCard>
 
-          {/* Stock */}
           <StockSection
             stock={stock}
             stockTotal={stockTotal}
             stockCustoTotal={stockCustoTotal}
             stockVendaEstimada={stockVendaEstimada}
             stockLucroEstimado={stockLucroEstimado}
+            ocultarValores={ocultarValores}
             onAdd={addStock}
             onUpdate={updateStock}
             onDelete={delStock}
             onSell={venderStock}
           />
 
-          {/* Transaction log */}
           {log.length > 0 && (
             <div className="mt-5">
               <div className="text-muted-foreground text-[13px] mb-2.5 font-semibold">
@@ -265,7 +250,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
               <div className="flex flex-col gap-1.5">
                 {log.slice().sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime()).map(e => (
                   <div key={e.id} className="flex items-center gap-3 bg-card border border-border rounded-lg px-3.5 py-2.5">
-                    <div className="text-lg">{e.tipo === "venda" ? "📈" : "📉"}</div>
+                    <div>{e.tipo === "venda" ? <TrendingUp size={16} className="text-[hsl(var(--garcia-green))]" /> : <TrendingDown size={16} className="text-[hsl(var(--garcia-red))]" />}</div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[13px] truncate">{e.descricao}</div>
                       <div className="text-[11px] text-muted-foreground">
@@ -274,20 +259,21 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
                     </div>
                     <div className="text-right shrink-0">
                       <div className="font-extrabold text-sm" style={{ color: e.tipo === "venda" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))" }}>
-                        {e.tipo === "venda" ? "+" : "-"}{fmt(e.valor)}
+                        {e.tipo === "venda" ? "+" : "-"}{fmtMasked(e.valor, ocultarValores)}
                       </div>
                       {e.tipo === "venda" && e.lucroVenda > 0 && (
-                        <div className="text-[10px] text-muted-foreground">lucro: {fmt(e.lucroVenda)}</div>
+                        <div className="text-[10px] text-muted-foreground">lucro: {fmtMasked(e.lucroVenda, ocultarValores)}</div>
                       )}
                     </div>
-                    <button onClick={() => delEntrada(e.id)} className="text-muted-foreground hover:text-foreground text-xs cursor-pointer bg-transparent border-none">×</button>
+                    <button onClick={() => delEntrada(e.id)} className="text-muted-foreground hover:text-destructive cursor-pointer bg-transparent border-none">
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* General summary */}
           <div className="mt-5">
             <div className="text-muted-foreground text-[13px] mb-2.5 font-semibold">RESUMO GERAL</div>
             <div className="grid grid-cols-2 gap-2.5">
@@ -296,8 +282,8 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
                 const l = (data.receita || 0) - (data.gastos || 0);
                 return (
                   <div key={nb.id} onClick={() => setSel(nb.id)} className="bg-card border border-border rounded-lg px-3.5 py-3 cursor-pointer">
-                    <div className="text-[13px] mb-1">{nb.icon} {nb.nome}</div>
-                    <div className="font-extrabold text-lg" style={{ color: l >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))" }}>{fmt(l)}</div>
+                    <div className="text-[13px] mb-1 inline-flex items-center gap-2"><Icon name={nb.icon} size={14} /> {nb.nome}</div>
+                    <div className="font-extrabold text-lg" style={{ color: l >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))" }}>{fmtMasked(l, ocultarValores)}</div>
                     <div className="text-[11px] text-muted-foreground">lucro</div>
                   </div>
                 );
