@@ -1,9 +1,12 @@
 import React from "react";
 
-export function SectionHeader({ icon, title, sub }: { icon: string; title: string; sub: string }) {
+export function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
   return (
     <div className="mb-5">
-      <div className="text-[22px] font-extrabold flex items-center gap-2">{icon} {title}</div>
+      <div className="text-[22px] font-extrabold flex items-center gap-2.5">
+        <span className="text-primary">{icon}</span>
+        <span>{title}</span>
+      </div>
       <div className="text-muted-foreground text-[13px] mt-0.5">{sub}</div>
     </div>
   );
@@ -68,7 +71,7 @@ export function GBtn({ onClick, color, children, small = false }: {
 }) {
   return (
     <button onClick={onClick} style={{ background: color }}
-      className={`text-primary-foreground border-none rounded-lg font-semibold text-[13px] cursor-pointer shrink-0 ${small ? "px-2.5 py-1 text-xs" : "px-4 py-2"}`}>
+      className={`text-primary-foreground border-none rounded-lg font-semibold text-[13px] cursor-pointer shrink-0 inline-flex items-center gap-1.5 ${small ? "px-2.5 py-1 text-xs" : "px-4 py-2"}`}>
       {children}
     </button>
   );
