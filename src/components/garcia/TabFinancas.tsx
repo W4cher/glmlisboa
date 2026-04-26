@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Financas, uid, today, fmt, CATS_ENTRADA, CATS_SAIDA } from "@/lib/garcia";
+import { Financas, uid, today, fmt, fmtMasked, CATS_ENTRADA, CATS_SAIDA } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
+import { Wallet, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
-interface Props { finanas: Financas; setFinanas: (v: Financas) => void; }
+interface Props { finanas: Financas; setFinanas: (v: Financas) => void; ocultarValores?: boolean; }
 
-export default function TabFinancas({ finanas, setFinanas }: Props) {
+export default function TabFinancas({ finanas, setFinanas, ocultarValores = false }: Props) {
   const [tipo, setTipo] = useState<"entrada" | "saida">("entrada");
   const [form, setForm] = useState({ descricao: "", valor: "", categoria: "", data: today() });
   const [showForm, setShowForm] = useState(false);
@@ -28,23 +29,23 @@ export default function TabFinancas({ finanas, setFinanas }: Props) {
 
   return (
     <div>
-      <SectionHeader icon="💳" title="Finanças Pessoais" sub="Controlo do dinheiro familiar" />
+      <SectionHeader icon={<Wallet size={22} />} title="Finanças Pessoais" sub="Controlo do dinheiro familiar" />
 
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <StatCard label="Entradas" value={fmt(totalE)} color="hsl(var(--garcia-green))" />
-        <StatCard label="Saídas" value={fmt(totalS)} color="hsl(var(--garcia-red))" />
-        <StatCard label="Saldo" value={fmt(saldo)} color={saldo >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"} />
+        <StatCard label="Entradas" value={fmtMasked(totalE, ocultarValores)} color="hsl(var(--garcia-green))" />
+        <StatCard label="Saídas" value={fmtMasked(totalS, ocultarValores)} color="hsl(var(--garcia-red))" />
+        <StatCard label="Saldo" value={fmtMasked(saldo, ocultarValores)} color={saldo >= 0 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"} />
       </div>
 
       <div className="flex gap-2 mb-4">
         {(["entrada", "saida"] as const).map(t => (
           <button key={t} onClick={() => { setTipo(t); setForm(f => ({ ...f, categoria: "" })); }}
-            className="px-4 py-2 rounded-lg cursor-pointer font-semibold text-[13px]" style={{
+            className="px-4 py-2 rounded-lg cursor-pointer font-semibold text-[13px] inline-flex items-center gap-1.5" style={{
               border: `1px solid ${tipo === t ? (t === "entrada" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))") : "hsl(var(--border))"}`,
               background: tipo === t ? (t === "entrada" ? "hsl(142 71% 15%)" : "hsl(0 72% 15%)") : "hsl(var(--card))",
               color: tipo === t ? (t === "entrada" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))") : "hsl(var(--muted-foreground))",
             }}>
-            {t === "entrada" ? "▲ Entradas" : "▼ Saídas"}
+            {t === "entrada" ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {t === "entrada" ? "Entradas" : "Saídas"}
           </button>
         ))}
         <div className="ml-auto">
@@ -61,7 +62,7 @@ export default function TabFinancas({ finanas, setFinanas }: Props) {
             <GInput label="Data" value={form.data} onChange={v => setForm({ ...form, data: v })} type="date" />
           </div>
           <div className="mt-3 flex gap-2">
-            <GBtn onClick={add} color={tipo === "entrada" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"}> Guardar</GBtn>
+            <GBtn onClick={add} color={tipo === "entrada" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"}>Guardar</GBtn>
             <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
           </div>
         </GCard>
@@ -69,10 +70,10 @@ export default function TabFinancas({ finanas, setFinanas }: Props) {
 
       <div className="flex flex-col gap-1.5">
         {tipo === "entrada" && finanas.entradas.slice().reverse().map(i => (
-          <FinRow key={i.id} i={i} color="hsl(var(--garcia-green))" sign="+" onDel={() => del(i.id, "entrada")} />
+          <FinRow key={i.id} i={i} color="hsl(var(--garcia-green))" sign="+" oculto={ocultarValores} onDel={() => del(i.id, "entrada")} />
         ))}
         {tipo === "saida" && finanas.saidas.slice().reverse().map(i => (
-          <FinRow key={i.id} i={i} color="hsl(var(--garcia-red))" sign="-" onDel={() => del(i.id, "saida")} />
+          <FinRow key={i.id} i={i} color="hsl(var(--garcia-red))" sign="-" oculto={ocultarValores} onDel={() => del(i.id, "saida")} />
         ))}
         {tipo === "entrada" && finanas.entradas.length === 0 && <Empty msg="Sem entradas registadas" />}
         {tipo === "saida" && finanas.saidas.length === 0 && <Empty msg="Sem saídas registadas" />}
@@ -81,15 +82,17 @@ export default function TabFinancas({ finanas, setFinanas }: Props) {
   );
 }
 
-function FinRow({ i, color, sign, onDel }: { i: { descricao: string; valor: number; categoria: string; data: string }; color: string; sign: string; onDel: () => void }) {
+function FinRow({ i, color, sign, oculto, onDel }: { i: { descricao: string; valor: number; categoria: string; data: string }; color: string; sign: string; oculto: boolean; onDel: () => void }) {
   return (
     <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-3.5 py-2.5">
       <div className="flex-1">
         <div className="font-semibold text-sm">{i.descricao}</div>
         <div className="text-[11px] text-muted-foreground">{i.categoria} · {i.data}</div>
       </div>
-      <div className="font-extrabold text-base" style={{ color }}>{sign}{fmt(i.valor)}</div>
-      <button onClick={onDel} className="bg-transparent border-none text-muted-foreground cursor-pointer text-base">×</button>
+      <div className="font-extrabold text-base" style={{ color }}>{sign}{fmtMasked(i.valor, oculto)}</div>
+      <button onClick={onDel} className="bg-transparent border-none text-muted-foreground hover:text-destructive cursor-pointer">
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }
