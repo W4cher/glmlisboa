@@ -129,6 +129,8 @@ export const PRIORIDADES = ["Urgente", "Importante", "Normal"];
 export const CATEGORIAS_T = ["Bosch", "Aprendizado", "Smart X Phone", "Sobrilho", "Finanças", "Família", "TikTok", "Outro"];
 export const CATS_ENTRADA = ["Bosch/Salário", "Smart X Phone", "Sobrilho", "Roupas", "Rendas", "TikTok", "Outro"];
 export const CATS_SAIDA = ["Casa", "Alimentação", "Escola filhos", "Ginásio", "Negócios", "Transporte", "Pessoal", "Outro"];
+export const CATS_CONTAS_PAGAR = ["Fornecedor", "Empréstimo", "Renda", "Água/Luz", "Impostos", "Serviços", "Cartão", "Outro"];
+
 
 export const DEFAULT_BLOCOS_ROTINA: BlocoRotina[] = [
   { id: "b1", hora: "07:00", label: "Acordar + café + plano do dia", bloco: "Manhã" },
