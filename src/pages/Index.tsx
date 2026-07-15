@@ -105,6 +105,7 @@ export default function Index() {
   useEffect(() => { if (loaded) debouncedSave("garcia:blocos", blocos); }, [blocos, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:finanas", finanas); }, [finanas, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:config", config); }, [config, loaded, debouncedSave]);
+  useEffect(() => { if (loaded) debouncedSave("garcia:contaspagar", contasPagar); }, [contasPagar, loaded, debouncedSave]);
 
   // Verificador de notificações: tarefas urgentes para hoje + cobranças vencidas
   useEffect(() => {
