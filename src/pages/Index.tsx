@@ -140,12 +140,13 @@ export default function Index() {
     await supabase.auth.signOut();
     setLoaded(false);
     setDevedores([]);
+    setContasPagar([]);
     setNegocios(DEFAULT_NEGOCIOS);
     setNegociosCfg(DEFAULT_NEGOCIOS_CFG);
     setAprendizado(DEFAULT_APRENDIZADO);
     setTarefas([]);
     setRotinaDia({});
-    setBlocos(DEFAULT_BLOCOS_ROTINA);
+    setBlocos([]);
     setFinanas({ entradas: [], saidas: [] });
     setConfig(DEFAULT_CONFIG);
   };
