@@ -39,12 +39,13 @@ export default function Index() {
   const [authChecked, setAuthChecked] = useState(false);
 
   const [devedores, setDevedores] = useState<Devedor[]>([]);
+  const [contasPagar, setContasPagar] = useState<ContaPagar[]>([]);
   const [negocios, setNegocios] = useState<Record<string, Negocio>>(DEFAULT_NEGOCIOS);
   const [negociosCfg, setNegociosCfg] = useState<NegocioCfg[]>(DEFAULT_NEGOCIOS_CFG);
   const [aprendizado, setAprendizado] = useState<AprendizadoArea[]>(DEFAULT_APRENDIZADO);
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [rotinaDia, setRotinaDia] = useState<Record<string, Record<string, boolean>>>({});
-  const [blocos, setBlocos] = useState<BlocoRotina[]>(DEFAULT_BLOCOS_ROTINA);
+  const [blocos, setBlocos] = useState<BlocoRotina[]>([]);
   const [finanas, setFinanas] = useState<Financas>({ entradas: [], saidas: [] });
   const [config, setConfig] = useState<Configuracoes>(DEFAULT_CONFIG);
   const [valoresVisiveis, setValoresVisiveis] = useState(true);
