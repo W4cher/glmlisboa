@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://xcuhgnultrudozndtimh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "sistema-garcia-mcp",
+      "version": "0.1.0",
+      "title": "Sistema Garcia MCP"
+    },
+    "tools": [
+      {
+        "name": "list_tarefas",
+        "title": "Listar tarefas",
+        "description": "Lista as tarefas do utilizador autenticado no Sistema Garcia.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "apenasPendentes": {
+              "type": "boolean",
+              "description": "Se true, retorna apenas tarefas por fazer."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_tarefa",
+        "title": "Adicionar tarefa",
+        "description": "Cria uma nova tarefa na lista do utilizador.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "texto": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Descrição da tarefa."
+            },
+            "prioridade": {
+              "type": "string",
+              "enum": [
+                "Urgente",
+                "Importante",
+                "Normal"
+              ]
+            },
+            "categoria": {
+              "type": "string"
+            },
+            "prazo": {
+              "type": "string",
+              "description": "Data no formato YYYY-MM-DD."
+            }
+          },
+          "required": [
+            "texto"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "complete_tarefa",
+        "title": "Marcar tarefa como feita",
+        "description": "Marca uma tarefa como concluída pelo seu id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "O id da tarefa."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_devedores",
+        "title": "Listar cobranças",
+        "description": "Lista os devedores/cobranças do utilizador. Opcionalmente apenas os não pagos.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "apenasPendentes": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "negocios_resumo",
+        "title": "Resumo dos negócios",
+        "description": "Devolve receita, gastos, lucro e stock de cada negócio do utilizador.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "financas_resumo",
+        "title": "Resumo financeiro",
+        "description": "Devolve totais de entradas, saídas e saldo do utilizador (em AOA).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
