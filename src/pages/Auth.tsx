@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function AuthPage() {
@@ -8,6 +9,18 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+
+  const rawNext = params.get("next") ?? "";
+  const nextPath = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
+
+  useEffect(() => {
+    // If already signed in, honour ?next=
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session && rawNext) navigate(nextPath, { replace: true });
+    });
+  }, [rawNext, nextPath, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +31,14 @@ export default function AuthPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
+      else navigate(nextPath, { replace: true });
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const emailRedirectTo = window.location.origin + nextPath;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo },
+      });
       if (error) setError(error.message);
       else setMessage("Verifica o teu email para confirmar a conta!");
     }
