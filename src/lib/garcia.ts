@@ -59,6 +59,19 @@ export interface Configuracoes {
   notificacoesAtivas: boolean;
   ocultarValores: boolean;
 }
+export interface ContaPagar {
+  id: string;
+  descricao: string;
+  credor: string;
+  valor: number;
+  valorOriginal: number;
+  categoria: string;
+  prazo: string;
+  notas: string;
+  pago: boolean;
+  pagamentos: Pagamento[];
+  criada: string;
+}
 
 // ── Helpers ──
 export const fmt = (n: number) =>
