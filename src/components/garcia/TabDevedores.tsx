@@ -102,7 +102,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
   return (
     <div>
       <SectionHeader icon={<Wallet size={22} />} title="Contas a Receber" sub="Nunca mais te esqueças de cobrar" />
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-5">
         <StatCard label="Total por cobrar" value={fmtMasked(totalPendente, ocultarValores)} color="hsl(var(--garcia-red))" />
         <StatCard label="Devedores ativos" value={pendentes.length} color="hsl(var(--garcia-gold))" />
       </div>
@@ -111,7 +111,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
 
       {showForm && (
         <GCard className="mt-4 mb-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <GInput label="Nome*" value={form.nome} onChange={v => setForm({ ...form, nome: v })} placeholder="Nome do cliente" />
             <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
             <GInput label="Produto/Serviço" value={form.produto} onChange={v => setForm({ ...form, produto: v })} placeholder="Ex: iPhone 13" />
@@ -188,7 +188,7 @@ function DevedorRow({
   if (isEdit) {
     return (
       <GCard>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <GInput label="Nome" value={editForm.nome || ""} onChange={v => setEditForm({ ...editForm, nome: v })} />
           <GInput label="Valor (AOA)" value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
           <GInput label="Produto" value={editForm.produto || ""} onChange={v => setEditForm({ ...editForm, produto: v })} />
