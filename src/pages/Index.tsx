@@ -67,8 +67,9 @@ export default function Index() {
   useEffect(() => {
     if (!user) { setLoaded(false); return; }
     (async () => {
-      const [d, n, nc, ap, tk, rd, bl, fi, cfg] = await Promise.all([
+      const [d, cp, n, nc, ap, tk, rd, bl, fi, cfg] = await Promise.all([
         load<Devedor[]>("garcia:devedores"),
+        load<ContaPagar[]>("garcia:contaspagar"),
         load<Record<string, Negocio>>("garcia:negocios"),
         load<NegocioCfg[]>("garcia:negocios_cfg"),
         load<AprendizadoArea[]>("garcia:aprendizado"),
@@ -79,12 +80,13 @@ export default function Index() {
         load<Configuracoes>("garcia:config"),
       ]);
       if (d) setDevedores(d);
+      if (cp) setContasPagar(cp);
       if (n) setNegocios(n);
       if (nc) setNegociosCfg(nc);
       if (ap) setAprendizado(ap);
       if (tk) setTarefas(tk);
       if (rd) setRotinaDia(rd);
-      if (bl && bl.length > 0) setBlocos(bl);
+      if (bl) setBlocos(bl);
       if (fi) setFinanas(fi);
       if (cfg) {
         setConfig(cfg);
