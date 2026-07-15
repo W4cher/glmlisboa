@@ -170,35 +170,35 @@ export default function Index() {
 
   return (
     <div className="bg-background min-h-screen font-sans text-foreground">
-      <div className="bg-card border-b border-border px-5 py-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold text-primary-foreground"
+      <div className="bg-card border-b border-border px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold text-primary-foreground shrink-0"
           style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--garcia-gold)))" }}>
           {(config.nome || "G").charAt(0).toUpperCase()}
         </div>
-        <div>
-          <div className="font-bold text-base tracking-tight">{nomeApp}</div>
-          <div className="text-muted-foreground text-[11px]">
+        <div className="min-w-0 flex-1">
+          <div className="font-bold text-sm sm:text-base tracking-tight truncate">{nomeApp}</div>
+          <div className="text-muted-foreground text-[10px] sm:text-[11px] truncate">
             {new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
           </div>
         </div>
-        <div className="ml-auto flex gap-1.5 items-center">
+        <div className="flex gap-1.5 items-center shrink-0">
           <button onClick={() => setValoresVisiveis(v => !v)}
             title={valoresVisiveis ? "Esconder valores" : "Mostrar valores"}
             className="text-muted-foreground hover:text-foreground bg-garcia-surface-hi border border-border rounded-lg p-1.5 transition-colors">
             {valoresVisiveis ? <Eye size={15} /> : <EyeOff size={15} />}
           </button>
-          <MiniStat label="Cobranças" value={devedores.filter(d => !d.pago).length} color="hsl(var(--garcia-red))" />
-          <MiniStat label="Tarefas" value={tarefas.filter(t => !t.feito).length} color="hsl(var(--garcia-gold))" />
+          <MiniStat label="A Receber" value={devedores.filter(d => !d.pago).length} color="hsl(var(--garcia-red))" />
+          <MiniStat label="A Pagar" value={contasPagar.filter(c => !c.pago).length} color="hsl(var(--garcia-gold))" />
         </div>
       </div>
 
-      <div className="flex overflow-x-auto bg-card border-b border-border px-3">
+      <div className="flex overflow-x-auto bg-card border-b border-border px-2 sm:px-3">
         {TABS.map(t => {
           const TIcon = t.icon;
           const active = tab === t.id;
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className="px-4 py-3 bg-transparent border-none cursor-pointer text-[13px] whitespace-nowrap transition-all flex items-center gap-1.5"
+              className="px-3 sm:px-4 py-3 bg-transparent border-none cursor-pointer text-[12px] sm:text-[13px] whitespace-nowrap transition-all flex items-center gap-1.5"
               style={{
                 color: active ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
                 fontWeight: active ? 700 : 400,
@@ -210,10 +210,11 @@ export default function Index() {
         })}
       </div>
 
-      <div className="max-w-[900px] mx-auto p-5">
+      <div className="max-w-[900px] mx-auto p-3 sm:p-5">
         {tab === "rotina" && <TabRotina rotinaDia={rotinaDia} setRotinaDia={setRotinaDia} blocos={blocos} setBlocos={setBlocos} nome={config.nome} />}
         {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} />}
         {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} ocultarValores={ocultar} />}
+        {tab === "contaspagar" && <TabContasPagar contas={contasPagar} setContas={setContasPagar} ocultarValores={ocultar} />}
         {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} setNegociosCfg={setNegociosCfg} ocultarValores={ocultar} />}
         {tab === "aprendizado" && <TabAprendizado areas={aprendizado} setAreas={setAprendizado} />}
         {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} ocultarValores={ocultar} />}
