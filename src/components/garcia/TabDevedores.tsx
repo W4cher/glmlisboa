@@ -188,7 +188,7 @@ function DevedorRow({
   if (isEdit) {
     return (
       <GCard>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <GInput label="Nome" value={editForm.nome || ""} onChange={v => setEditForm({ ...editForm, nome: v })} />
           <GInput label="Valor (AOA)" value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
           <GInput label="Produto" value={editForm.produto || ""} onChange={v => setEditForm({ ...editForm, produto: v })} />
