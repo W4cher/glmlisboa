@@ -2,13 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   load, save, Devedor, Negocio, NegocioCfg, Tarefa, Financas, AprendizadoArea,
-  BlocoRotina, Configuracoes,
-  DEFAULT_NEGOCIOS, DEFAULT_NEGOCIOS_CFG, DEFAULT_BLOCOS_ROTINA, DEFAULT_APRENDIZADO, DEFAULT_CONFIG,
+  BlocoRotina, Configuracoes, ContaPagar,
+  DEFAULT_NEGOCIOS, DEFAULT_NEGOCIOS_CFG, DEFAULT_APRENDIZADO, DEFAULT_CONFIG,
   diasAtras,
 } from "@/lib/garcia";
 import TabRotina from "@/components/garcia/TabRotina";
 import TabTarefas from "@/components/garcia/TabTarefas";
 import TabDevedores from "@/components/garcia/TabDevedores";
+import TabContasPagar from "@/components/garcia/TabContasPagar";
 import TabNegocios from "@/components/garcia/TabNegocios";
 import TabAprendizado from "@/components/garcia/TabAprendizado";
 import TabFinancas from "@/components/garcia/TabFinancas";
@@ -16,14 +17,15 @@ import TabConfig from "@/components/garcia/TabConfig";
 import AuthPage from "@/pages/Auth";
 import { notify } from "@/lib/notifications";
 import {
-  Clock, CheckSquare, Wallet, BarChart3, GraduationCap, CreditCard, Settings,
+  Clock, CheckSquare, Wallet, Receipt, BarChart3, GraduationCap, CreditCard, Settings,
   Eye, EyeOff, type LucideIcon,
 } from "lucide-react";
 
 const TABS: { id: string; icon: LucideIcon; label: string }[] = [
   { id: "rotina", icon: Clock, label: "Rotina" },
   { id: "tarefas", icon: CheckSquare, label: "Tarefas" },
-  { id: "devedores", icon: Wallet, label: "Cobranças" },
+  { id: "devedores", icon: Wallet, label: "A Receber" },
+  { id: "contaspagar", icon: Receipt, label: "A Pagar" },
   { id: "negocios", icon: BarChart3, label: "Negócios" },
   { id: "aprendizado", icon: GraduationCap, label: "Aprendizado" },
   { id: "finanas", icon: CreditCard, label: "Finanças" },
