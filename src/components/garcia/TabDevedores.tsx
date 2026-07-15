@@ -102,7 +102,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
   return (
     <div>
       <SectionHeader icon={<Wallet size={22} />} title="Contas a Receber" sub="Nunca mais te esqueças de cobrar" />
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-5">
         <StatCard label="Total por cobrar" value={fmtMasked(totalPendente, ocultarValores)} color="hsl(var(--garcia-red))" />
         <StatCard label="Devedores ativos" value={pendentes.length} color="hsl(var(--garcia-gold))" />
       </div>
