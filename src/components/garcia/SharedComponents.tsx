@@ -18,9 +18,15 @@ export function GCard({ children, className = "" }: { children: React.ReactNode;
 
 export function StatCard({ label, value, color, small = false }: { label: string; value: string | number; color: string; small?: boolean }) {
   return (
-    <div className="bg-card border border-border rounded-lg" style={{ padding: small ? "10px 12px" : "14px 16px" }}>
-      <div className="font-extrabold" style={{ fontSize: small ? 18 : 22, color }}>{value}</div>
-      <div className="text-[11px] text-muted-foreground mt-0.5">{label}</div>
+    <div className="bg-card border border-border rounded-lg min-w-0 overflow-hidden" style={{ padding: small ? "8px 10px" : "12px 14px" }}>
+      <div
+        className={`font-extrabold leading-tight break-words ${small ? "text-sm sm:text-base" : "text-base sm:text-xl"}`}
+        style={{ color, wordBreak: "break-word", overflowWrap: "anywhere" }}
+        title={String(value)}
+      >
+        {value}
+      </div>
+      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</div>
     </div>
   );
 }
