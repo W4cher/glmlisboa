@@ -220,8 +220,8 @@ function DevedorRow({
             </div>
           )}
         </div>
-        <div className="text-right shrink-0">
-          <div className="font-extrabold text-lg" style={{ color: done ? "hsl(var(--garcia-green))" : "hsl(var(--primary))" }}>{fmtMasked(d.valor, ocultarValores)}</div>
+        <div className="text-right shrink-0 min-w-0 max-w-[45%]">
+          <div className="font-extrabold text-base sm:text-lg break-words" style={{ color: done ? "hsl(var(--garcia-green))" : "hsl(var(--primary))", overflowWrap: "anywhere" }}>{fmtMasked(d.valor, ocultarValores)}</div>
           <div className="flex gap-1.5 mt-1 justify-end">
             {!done && <GBtn onClick={onPagar} color="hsl(var(--garcia-green))" small><CreditCard size={12} /> Pagar</GBtn>}
             {!done && <GBtn onClick={onStartEdit} color="hsl(var(--garcia-blue))" small><Pencil size={12} /></GBtn>}

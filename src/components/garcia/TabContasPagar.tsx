@@ -141,8 +141,8 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
                     </div>
                   )}
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="font-extrabold text-lg" style={{ color: "hsl(var(--garcia-red))" }}>{fmtMasked(c.valor, ocultarValores)}</div>
+              <div className="text-right shrink-0 min-w-0 max-w-[45%]">
+                 <div className="font-extrabold text-base sm:text-lg break-words" style={{ color: "hsl(var(--garcia-red))", overflowWrap: "anywhere" }}>{fmtMasked(c.valor, ocultarValores)}</div>
                   <div className="flex gap-1.5 mt-1 justify-end flex-wrap">
                     <GBtn onClick={() => setPagandoId(pagandoId === c.id ? null : c.id)} color="hsl(var(--garcia-green))" small><CreditCard size={12} /> Pagar</GBtn>
                     <GBtn onClick={() => startEdit(c)} color="hsl(var(--garcia-blue))" small><Pencil size={12} /></GBtn>
