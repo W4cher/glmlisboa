@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Devedor, Negocio, NegocioCfg, LogEntry, enforceLogLimits, uid, today } from "@/lib/garcia";
+import { Devedor, Negocio, NegocioCfg, LogEntry, uid, today } from "@/lib/garcia";
 import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { Wallet, CreditCard, Trash2, Pencil, Check, X, AlertTriangle, Briefcase } from "lucide-react";
@@ -85,7 +85,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
           [devedor.negocio]: {
             ...current,
             receita: (current.receita || 0) + montante,
-            log: enforceLogLimits([...(current.log || []), entrada]),
+            log: [...(current.log || []), entrada],
           }
         };
       });

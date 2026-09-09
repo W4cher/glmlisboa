@@ -37,7 +37,7 @@ A app organiza-se em oito separadores (`src/components/garcia/`):
 | **Tarefas** | `TabTarefas.tsx` | Lista de tarefas com prioridade (Urgente/Importante/Normal), categoria e prazo. |
 | **A Receber** | `TabDevedores.tsx` | Devedores com valor original, pagamentos parciais e histórico. |
 | **A Pagar** | `TabContasPagar.tsx` | Contas a pagar com credor, categoria, prazo e pagamentos parciais. |
-| **Negócios** | `TabNegocios.tsx` + `StockSection.tsx` | Um cartão por negócio com receita, gastos, meta, notas, registo de vendas e gestão de stock (quantidade, custo unitário, preço de venda). |
+| **Negócios** | `TabNegocios.tsx` + `StockSection.tsx` | Um cartão por negócio com receita, gastos, meta, notas, histórico completo de vendas e gastos, e gestão de stock (quantidade, custo unitário, preço de venda). |
 | **Aprendizado** | `TabAprendizado.tsx` | Áreas de estudo com objectivo, tópicos e notas. |
 | **Finanças** | `TabFinancas.tsx` | Entradas e saídas por categoria, com gráficos (Recharts). |
 | **Configurações** | `TabConfig.tsx` | Nome, moeda, categorias personalizadas, notificações e modo "ocultar valores". |
@@ -214,9 +214,9 @@ do utilizador autenticado.
 npm test
 ```
 
-Vitest com ambiente jsdom, setup em `src/test/setup.ts`. A cobertura é ainda mínima
-(`src/test/example.test.ts`); a lógica de negócio em `src/lib/garcia.ts`
-(`enforceLogLimits`, cálculos de saldo e de lucro) é o próximo alvo natural.
+Vitest com ambiente jsdom, setup em `src/test/setup.ts`. A cobertura é ainda pequena:
+`src/test/log.test.ts` cobre o registo de transações (regressão da truncagem de
+histórico). Os cálculos de saldo, lucro e margem são o próximo alvo natural.
 
 ## Fluxo de trabalho: local, GitHub e Lovable
 
@@ -245,6 +245,8 @@ Direcção do produto: passar de ferramenta pessoal a serviço para pequenos emp
       respectivo símbolo, escolhidas no onboarding e em Configurações — ver `src/lib/moeda.ts`
 - [x] **Onboarding genérico** — assistente inicial de 4 passos; negócios, rotina e
       categorias deixaram de vir pré-preenchidos e são definidos pelo utilizador
+- [x] **Histórico completo** — o registo de transações deixou de ser truncado na
+      gravação; o limite passou para a apresentação, com "ver tudo"
 - [ ] **Internacionalização** — português e inglês
 - [ ] **Tema claro e escuro** — `next-themes` já está instalado, falta expor o selector
 - [ ] **Diálogos próprios** — substituir os `confirm()` nativos por `AlertDialog`

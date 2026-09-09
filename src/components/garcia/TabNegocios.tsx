@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, negocioVazio, uid, today } from "@/lib/garcia";
+import { Negocio, NegocioCfg, LogEntry, StockItem, logOrdenado, LOG_VISIVEL_INICIAL, negocioVazio, uid, today } from "@/lib/garcia";
 import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
@@ -24,6 +24,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
   const [showAddNeg, setShowAddNeg] = useState(false);
   const [tipo, setTipo] = useState<"venda" | "gasto">("venda");
   const [form, setForm] = useState({ descricao: "", valor: "", custo: "", qty: "1", cliente: "", data: today() });
+  const [verTudoLog, setVerTudoLog] = useState(false);
 
   const n = negocios[sel] || { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] } as Negocio;
 
@@ -49,7 +50,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
       const currentLog = [...(prev[sel]?.log || []), entrada];
       return {
         ...prev,
-        [sel]: { ...prev[sel], receita: novaReceita, gastos: novosGastos, log: enforceLogLimits(currentLog) }
+        [sel]: { ...prev[sel], receita: novaReceita, gastos: novosGastos, log: currentLog }
       };
     });
 
@@ -117,7 +118,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
           receita: (current?.receita || 0) + valorVenda,
           gastos: (current?.gastos || 0) + custoVenda,
           stock: newStock,
-          log: enforceLogLimits(currentLog),
+          log: currentLog,
         }
       };
     });
@@ -125,7 +126,8 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
   const lucro = n.receita - n.gastos;
   const margem = n.receita > 0 ? Math.round((lucro / n.receita) * 100) : 0;
-  const log = enforceLogLimits(n.log || []);
+  const log = logOrdenado(n.log || []);
+  const logVisivel = verTudoLog ? log : log.slice(0, LOG_VISIVEL_INICIAL);
   const stock = n.stock || [];
 
   const stockTotal = stock.reduce((s, p) => s + p.quantidade, 0);
@@ -264,12 +266,19 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
           {log.length > 0 && (
             <div className="mt-5">
-              <div className="text-muted-foreground text-[13px] mb-2.5 font-semibold">
-                REGISTO DE TRANSAÇÕES ({log.length}/7)
-                <span className="font-normal ml-2">— auto-limpeza aos 7 dias</span>
+              <div className="flex items-baseline justify-between gap-2 mb-2.5">
+                <div className="text-muted-foreground text-[13px] font-semibold">
+                  REGISTO DE TRANSAÇÕES ({log.length})
+                </div>
+                {log.length > LOG_VISIVEL_INICIAL && (
+                  <button onClick={() => setVerTudoLog(v => !v)}
+                    className="text-[11px] text-primary hover:underline bg-transparent border-none cursor-pointer shrink-0">
+                    {verTudoLog ? "Ver menos" : `Ver todas as ${log.length}`}
+                  </button>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
-                {log.slice().sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime()).map(e => (
+                {logVisivel.map(e => (
                   <div key={e.id} className="flex items-center gap-3 bg-card border border-border rounded-lg px-3.5 py-2.5">
                     <div>{e.tipo === "venda" ? <TrendingUp size={16} className="text-[hsl(var(--garcia-green))]" /> : <TrendingDown size={16} className="text-[hsl(var(--garcia-red))]" />}</div>
                     <div className="flex-1 min-w-0">
@@ -292,6 +301,12 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
                   </div>
                 ))}
               </div>
+              {!verTudoLog && log.length > LOG_VISIVEL_INICIAL && (
+                <button onClick={() => setVerTudoLog(true)}
+                  className="w-full mt-2 py-2 rounded-lg text-[12px] text-muted-foreground hover:text-primary bg-transparent border border-dashed border-border hover:border-primary cursor-pointer transition-colors">
+                  Mostrar as restantes {log.length - LOG_VISIVEL_INICIAL}
+                </button>
+              )}
             </div>
           )}
 

@@ -87,15 +87,19 @@ export const today = () => new Date().toISOString().split("T")[0];
 export const uid = () => Math.random().toString(36).slice(2, 8);
 export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
 
-export const enforceLogLimits = (log: LogEntry[]): LogEntry[] => {
-  let filtered = log.filter(e => diasAtras(e.data) < 7);
-  if (filtered.length > 7) {
-    filtered = filtered
-      .sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime())
-      .slice(0, 7);
-  }
-  return filtered;
-};
+/**
+ * Ordena o registo de transações do mais recente para o mais antigo.
+ *
+ * Substitui o antigo `enforceLogLimits`, que era chamado na gravação e apagava
+ * mesmo os registos com mais de 7 dias ou acima dos 7 por negócio — ou seja,
+ * destruía o histórico do utilizador no Supabase. O histórico passa a ser
+ * guardado por inteiro e é a apresentação que limita quantos se mostram.
+ */
+export const logOrdenado = (log: LogEntry[]): LogEntry[] =>
+  [...log].sort((a, b) => new Date(b.registadoEm).getTime() - new Date(a.registadoEm).getTime());
+
+/** Quantas transações se mostram antes do "ver tudo". */
+export const LOG_VISIVEL_INICIAL = 10;
 
 // ── Cloud Storage (Supabase) ──
 export const load = async <T>(key: string): Promise<T | null> => {
