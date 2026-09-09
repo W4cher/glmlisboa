@@ -104,8 +104,13 @@ VITE_SUPABASE_URL="https://<project>.supabase.co"
 Do lado do servidor (secrets das Edge Functions, definidos no painel do Supabase):
 
 ```
-LOVABLE_API_KEY      # usada por gerar-rotina para chamar o AI Gateway
+ANTHROPIC_API_KEY    # preferida por gerar-rotina (Claude)
+LOVABLE_API_KEY      # alternativa, enquanto a app viver no Lovable
 ```
+
+A `gerar-rotina` escolhe sozinha: usa a `ANTHROPIC_API_KEY` se existir, senão a
+`LOVABLE_API_KEY`. É o que permite mudar de servidor sem parar o serviço — basta definir
+a chave própria e a função passa a usá-la no pedido seguinte.
 
 > **Nunca** colocar a chave `service_role` em variáveis `VITE_*` — tudo o que tem esse
 > prefixo é embutido no bundle e fica visível no browser. A segurança dos dados assenta
@@ -197,10 +202,20 @@ em `src/lib/garcia.ts`.
 
 ### `gerar-rotina`
 
-Recebe `{ rotinaAtual, objetivos }`, chama o AI Gateway do Lovable
-(`google/gemini-2.5-flash`) com um *tool call* estruturado e devolve um resumo mais uma
-lista de blocos de rotina propostos. Trata o `429` (limite de pedidos) devolvendo uma
-mensagem legível.
+Recebe `{ rotinaAtual, objetivos }` e devolve `{ resumo, blocos }`.
+
+Suporta dois fornecedores e escolhe por esta ordem:
+
+1. **`ANTHROPIC_API_KEY`** → Claude (`claude-opus-5`), com *tool call* estrito e
+   `effort: "low"` — a tarefa é simples e bem definida, não justifica raciocínio profundo
+2. **`LOVABLE_API_KEY`** → gateway do Lovable (`google/gemini-2.5-flash`)
+
+Os dois caminhos devolvem a mesma forma, por isso a app não sabe qual foi usado. Sem
+nenhuma das chaves, devolve `503` com uma mensagem clara em vez de rebentar.
+
+Erros de limite de pedidos (`429`), créditos esgotados (`402`) e falhas do fornecedor
+(`502`) trazem mensagens legíveis em português, que o `TabRotina` lê do corpo da
+resposta.
 
 ### `mcp`
 

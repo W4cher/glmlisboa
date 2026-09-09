@@ -68,7 +68,15 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
       setRotinaAtual("");
       toast.success("Rotina personalizada gerada");
     } catch (e: any) {
-      toast.error(e.message || "Erro ao gerar rotina");
+      // Quando a função devolve um estado != 2xx, o supabase-js mete a resposta
+      // em `error.context` e a mensagem fica um "non-2xx status code" opaco.
+      // O texto útil — em português — está no corpo.
+      let msg = e?.message || "Erro ao gerar rotina";
+      try {
+        const corpo = await e?.context?.json?.();
+        if (corpo?.error) msg = corpo.error;
+      } catch { /* fica a mensagem genérica */ }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
