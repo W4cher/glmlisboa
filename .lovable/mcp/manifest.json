@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sdk_version": "0.22.2",
+  "sdk_version": "2.0.4",
   "path": "/functions/v1/mcp",
   "auth": {
     "type": "oauth",
@@ -13,13 +13,13 @@
     "server": {
       "name": "sistema-garcia-mcp",
       "version": "0.1.0",
-      "title": "Sistema Garcia MCP"
+      "title": "My Daily Compass MCP"
     },
     "tools": [
       {
         "name": "list_tarefas",
         "title": "Listar tarefas",
-        "description": "Lista as tarefas do utilizador autenticado no Sistema Garcia.",
+        "description": "Lista as tarefas do utilizador autenticado no My Daily Compass.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -129,14 +129,14 @@
       {
         "name": "negocios_resumo",
         "title": "Resumo dos negócios",
-        "description": "Devolve receita, gastos, lucro e stock de cada negócio do utilizador.",
+        "description": "Devolve receita, gastos, lucro e stock de cada negócio do utilizador, na moeda que ele configurou.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {}
         },
@@ -145,14 +145,14 @@
       {
         "name": "financas_resumo",
         "title": "Resumo financeiro",
-        "description": "Devolve totais de entradas, saídas e saldo do utilizador (em AOA).",
+        "description": "Devolve totais de entradas, saídas e saldo do utilizador na moeda que ele configurou.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {}
         },

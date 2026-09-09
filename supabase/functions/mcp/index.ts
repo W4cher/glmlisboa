@@ -3,17 +3,54 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@2.0.4";
 
 // src/lib/mcp/tools/list-tarefas.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/supabase.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.97.0";
+function runtimeEnv(name) {
+  const runtime = globalThis;
+  return runtime.Deno?.env?.get?.(name) ?? runtime.process?.env?.[name];
+}
+function configuredEnv(names) {
+  for (const name of names) {
+    const value = runtimeEnv(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function supabaseProjectUrl() {
+  const url = configuredEnv(["SUPABASE_URL", "VITE_SUPABASE_URL"]);
+  if (!url) throw new Error("SUPABASE_URL (or VITE_SUPABASE_URL) is required");
+  return url;
+}
+function supabasePublishableKey() {
+  const direct = configuredEnv(["SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY"]);
+  if (direct) return direct;
+  const keyset = runtimeEnv("SUPABASE_PUBLISHABLE_KEYS");
+  if (keyset) {
+    try {
+      const parsed = JSON.parse(keyset);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        const key = [keys.default, ...Object.values(keys)].find((v) => typeof v === "string" && v.trim().startsWith("sb_publishable_"))?.trim();
+        if (key) return key;
+      }
+    } catch {
+    }
+  }
+  const legacy = configuredEnv(["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
+  if (legacy) return legacy;
+  throw new Error("SUPABASE_PUBLISHABLE_KEY, SUPABASE_PUBLISHABLE_KEYS, or SUPABASE_ANON_KEY is required");
+}
 function supabaseForUser(ctx) {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+  const token = ctx.getToken();
+  if (!token) throw new Error("supabaseForUser requires a verified OAuth token");
+  return createClient(supabaseProjectUrl(), supabasePublishableKey(), {
+    global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false }
   });
 }
@@ -63,7 +100,7 @@ var list_tarefas_default = defineTool({
 });
 
 // src/lib/mcp/tools/add-tarefa.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z2 } from "npm:zod@^3.25.76";
 var add_tarefa_default = defineTool2({
   name: "add_tarefa",
@@ -98,7 +135,7 @@ var add_tarefa_default = defineTool2({
 });
 
 // src/lib/mcp/tools/complete-tarefa.ts
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z3 } from "npm:zod@^3.25.76";
 var complete_tarefa_default = defineTool3({
   name: "complete_tarefa",
@@ -122,7 +159,7 @@ var complete_tarefa_default = defineTool3({
 });
 
 // src/lib/mcp/tools/list-devedores.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z4 } from "npm:zod@^3.25.76";
 var list_devedores_default = defineTool4({
   name: "list_devedores",
@@ -145,7 +182,7 @@ var list_devedores_default = defineTool4({
 });
 
 // src/lib/mcp/tools/negocios-resumo.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@2.0.4";
 var negocios_resumo_default = defineTool5({
   name: "negocios_resumo",
   title: "Resumo dos neg\xF3cios",
@@ -182,7 +219,7 @@ var negocios_resumo_default = defineTool5({
 });
 
 // src/lib/mcp/tools/financas-resumo.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@2.0.4";
 var financas_resumo_default = defineTool6({
   name: "financas_resumo",
   title: "Resumo financeiro",
@@ -226,5 +263,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.22.2/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@2.0.4/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
