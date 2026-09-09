@@ -161,8 +161,33 @@ RLS activo, com quatro políticas (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) todas
 (`devedores`, `negocios`, `tarefas`, `financas`, `config`, …) através de
 `load()` e `save()` em `src/lib/garcia.ts`.
 
-Este desenho é simples e rápido de evoluir, mas não permite consultas relacionais nem
-partilha de dados entre utilizadores. Ver [Roadmap](#roadmap).
+Este desenho é simples, mas não permite consultas relacionais nem partilha entre
+utilizadores. Por isso o **núcleo de negócio já foi movido para tabelas próprias**
+(migração `20260909120000_projectos_relacionais.sql`):
+
+| Tabela | O que guarda |
+|---|---|
+| `profiles` | espelho legível de `auth.users` — necessário para convidar por email |
+| `projects` | o que a app chama "negócio"; é a entidade que se partilha |
+| `project_members` | colaboradores, com papel `editor` ou `leitor` |
+| `project_invites` | convites por email, com token e validade |
+| `transactions` | vendas e gastos — o antigo `log`, agora sem limite |
+| `stock_items` | stock por projecto |
+| `activity_log` | quem fez o quê, para o feed de colaboração |
+
+O acesso é decidido por três funções `SECURITY DEFINER` — `pode_ver_projecto`,
+`pode_editar_projecto` e `e_dono_do_projecto` — chamadas de dentro das políticas RLS.
+Têm de ser `SECURITY DEFINER` para poderem ler `project_members` sem reentrar nas
+políticas, que de outro modo entrariam em recursão.
+
+**Totais anteriores à migração.** Como o antigo `enforceLogLimits` apagava transações,
+somar as que restam daria um valor muito abaixo do real. As colunas
+`projects.receita_legado` e `gastos_legado` guardam a diferença, e o total mostrado é
+`legado + soma das transações` — o que reproduz exactamente os números antigos.
+
+O que é pessoal e nunca se partilha — rotina, tarefas, aprendizado, finanças pessoais e
+configurações — continua em `user_data`. A migração é aditiva: não toca nos dados
+antigos, que ficam como rede de segurança.
 
 Os tipos TypeScript de cada entidade (`Devedor`, `Negocio`, `StockItem`, `Tarefa`,
 `ContaPagar`, `Financas`, `BlocoRotina`, `AprendizadoArea`, `Configuracoes`) estão todos
@@ -255,7 +280,8 @@ Direcção do produto: passar de ferramenta pessoal a serviço para pequenos emp
 - [x] **Tema claro e escuro** — via `next-themes`, com opção "Sistema"; o escuro
       continua a ser o predefinido
 - [x] **Diálogos próprios** — os `confirm()` nativos deram lugar a `ConfirmarDialog`
-- [ ] **Colaboração em projectos** — convite por email, permissões e registo de actividade
+- [~] **Colaboração em projectos** — esquema relacional, RLS e migração de dados feitos;
+      falta adaptar a app e construir os convites e o feed de actividade
 - [ ] **Leitura de facturas por fotografia** — extrair valor, data e fornecedor
 - [ ] **Assistente de IA de negócio** — para além da rotina, ajudar a estruturar a ideia
 - [ ] **Planos** — nível gratuito e subscrição paga
