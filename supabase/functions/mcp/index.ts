@@ -3,10 +3,10 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@2.0.4";
 
 // src/lib/mcp/tools/list-tarefas.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/supabase.ts
@@ -100,7 +100,7 @@ var list_tarefas_default = defineTool({
 });
 
 // src/lib/mcp/tools/add-tarefa.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z2 } from "npm:zod@^3.25.76";
 var add_tarefa_default = defineTool2({
   name: "add_tarefa",
@@ -135,7 +135,7 @@ var add_tarefa_default = defineTool2({
 });
 
 // src/lib/mcp/tools/complete-tarefa.ts
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z3 } from "npm:zod@^3.25.76";
 var complete_tarefa_default = defineTool3({
   name: "complete_tarefa",
@@ -159,7 +159,7 @@ var complete_tarefa_default = defineTool3({
 });
 
 // src/lib/mcp/tools/list-devedores.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@2.0.4";
 import { z as z4 } from "npm:zod@^3.25.76";
 var list_devedores_default = defineTool4({
   name: "list_devedores",
@@ -182,7 +182,7 @@ var list_devedores_default = defineTool4({
 });
 
 // src/lib/mcp/tools/negocios-resumo.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@2.0.4";
 var negocios_resumo_default = defineTool5({
   name: "negocios_resumo",
   title: "Resumo dos neg\xF3cios",
@@ -219,7 +219,7 @@ var negocios_resumo_default = defineTool5({
 });
 
 // src/lib/mcp/tools/financas-resumo.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@2.0.4";
 var financas_resumo_default = defineTool6({
   name: "financas_resumo",
   title: "Resumo financeiro",
@@ -263,5 +263,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.22.2/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@2.0.4/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
