@@ -149,13 +149,15 @@ import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.22.2";
 var negocios_resumo_default = defineTool5({
   name: "negocios_resumo",
   title: "Resumo dos neg\xF3cios",
-  description: "Devolve receita, gastos, lucro e stock de cada neg\xF3cio do utilizador.",
+  description: "Devolve receita, gastos, lucro e stock de cada neg\xF3cio do utilizador, na moeda que ele configurou.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
     requireAuth(ctx);
     const negocios = await loadKey(ctx, "garcia:negocios") ?? {};
     const cfg = await loadKey(ctx, "garcia:negocios_cfg") ?? [];
+    const conf = await loadKey(ctx, "garcia:config") ?? {};
+    const moeda = conf.moeda ?? "AOA";
     const resumo = Object.entries(negocios).map(([id, n]) => {
       const meta = cfg.find((c) => c.id === id);
       const stockValor = (n.stock ?? []).reduce(
@@ -173,8 +175,8 @@ var negocios_resumo_default = defineTool5({
       };
     });
     return {
-      content: [{ type: "text", text: JSON.stringify(resumo, null, 2) }],
-      structuredContent: { negocios: resumo }
+      content: [{ type: "text", text: JSON.stringify({ moeda, negocios: resumo }, null, 2) }],
+      structuredContent: { moeda, negocios: resumo }
     };
   }
 });
@@ -184,12 +186,14 @@ import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.22.2";
 var financas_resumo_default = defineTool6({
   name: "financas_resumo",
   title: "Resumo financeiro",
-  description: "Devolve totais de entradas, sa\xEDdas e saldo do utilizador (em AOA).",
+  description: "Devolve totais de entradas, sa\xEDdas e saldo do utilizador na moeda que ele configurou.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
     requireAuth(ctx);
     const fin = await loadKey(ctx, "garcia:finanas") ?? { entradas: [], saidas: [] };
+    const cfg = await loadKey(ctx, "garcia:config") ?? {};
+    const moeda = cfg.moeda ?? "AOA";
     const totalEntradas = (fin.entradas ?? []).reduce((s, i) => s + (Number(i.valor) || 0), 0);
     const totalSaidas = (fin.saidas ?? []).reduce((s, i) => s + (Number(i.valor) || 0), 0);
     const saldo = totalEntradas - totalSaidas;
@@ -197,12 +201,12 @@ var financas_resumo_default = defineTool6({
       content: [
         {
           type: "text",
-          text: `Entradas: ${totalEntradas} AOA
-Sa\xEDdas: ${totalSaidas} AOA
-Saldo: ${saldo} AOA`
+          text: `Entradas: ${totalEntradas} ${moeda}
+Sa\xEDdas: ${totalSaidas} ${moeda}
+Saldo: ${saldo} ${moeda}`
         }
       ],
-      structuredContent: { totalEntradas, totalSaidas, saldo, entradas: fin.entradas, saidas: fin.saidas }
+      structuredContent: { moeda, totalEntradas, totalSaidas, saldo, entradas: fin.entradas, saidas: fin.saidas }
     };
   }
 });

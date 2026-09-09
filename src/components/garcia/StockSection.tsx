@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { StockItem, uid, fmt, fmtMasked } from "@/lib/garcia";
+import { StockItem, uid } from "@/lib/garcia";
+import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { GCard, GInput, GBtn, StatCard } from "./SharedComponents";
 import { Package, Plus, Pencil, Trash2, ShoppingCart, Check, X } from "lucide-react";
 
@@ -17,6 +18,9 @@ interface Props {
 }
 
 export default function StockSection({ stock, stockTotal, stockCustoTotal, stockVendaEstimada, stockLucroEstimado, ocultarValores = false, onAdd, onUpdate, onDelete, onSell }: Props) {
+  const fmt = useFmt();
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ nome: "", quantidade: "", custoUnitario: "", precoVenda: "" });
   const [sellId, setSellId] = useState<string | null>(null);
@@ -99,8 +103,8 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
           <div className="grid grid-cols-2 gap-3">
             <GInput label="Nome do produto*" value={form.nome} onChange={v => setForm({ ...form, nome: v })} placeholder="Ex: iPhone 13" />
             <GInput label="Quantidade*" value={form.quantidade} onChange={v => setForm({ ...form, quantidade: v })} type="number" placeholder="0" />
-            <GInput label="Custo unitário (AOA)" value={form.custoUnitario} onChange={v => setForm({ ...form, custoUnitario: v })} type="number" placeholder="0" />
-            <GInput label="Preço de venda (AOA)*" value={form.precoVenda} onChange={v => setForm({ ...form, precoVenda: v })} type="number" placeholder="0" />
+            <GInput label={`Custo unitário (${simbolo})`} value={form.custoUnitario} onChange={v => setForm({ ...form, custoUnitario: v })} type="number" placeholder="0" />
+            <GInput label={`Preço de venda (${simbolo})*`} value={form.precoVenda} onChange={v => setForm({ ...form, precoVenda: v })} type="number" placeholder="0" />
           </div>
           {stock.find(s => s.nome.toLowerCase().trim() === form.nome.toLowerCase().trim()) && (
             <div className="mt-2 text-[12px] text-amber-400 font-medium">
@@ -126,8 +130,8 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
                   <div className="grid grid-cols-2 gap-3">
                     <GInput label="Nome" value={editForm.nome || ""} onChange={v => setEditForm({ ...editForm, nome: v })} />
                     <GInput label="Quantidade" value={String(editForm.quantidade ?? "")} onChange={v => setEditForm({ ...editForm, quantidade: parseInt(v) || 0 })} type="number" />
-                    <GInput label="Custo unitário" value={String(editForm.custoUnitario ?? "")} onChange={v => setEditForm({ ...editForm, custoUnitario: parseFloat(v) || 0 })} type="number" />
-                    <GInput label="Preço de venda" value={String(editForm.precoVenda ?? "")} onChange={v => setEditForm({ ...editForm, precoVenda: parseFloat(v) || 0 })} type="number" />
+                    <GInput label={`Custo unitário (${simbolo})`} value={String(editForm.custoUnitario ?? "")} onChange={v => setEditForm({ ...editForm, custoUnitario: parseFloat(v) || 0 })} type="number" />
+                    <GInput label={`Preço de venda (${simbolo})`} value={String(editForm.precoVenda ?? "")} onChange={v => setEditForm({ ...editForm, precoVenda: parseFloat(v) || 0 })} type="number" />
                   </div>
                   <div className="mt-3 flex gap-2">
                     <GBtn onClick={saveEdit} color="hsl(var(--garcia-green))"><Check size={14} /> Guardar</GBtn>

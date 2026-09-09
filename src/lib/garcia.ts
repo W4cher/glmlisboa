@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { MOEDA_PADRAO, type CodigoMoeda } from "@/lib/moeda";
 
 // ── Types ──
 export interface LogEntry {
@@ -59,6 +60,8 @@ export interface Configuracoes {
   ocultarValores: boolean;
   /** Falso/ausente enquanto o utilizador não passar pelo assistente inicial. */
   onboardingCompleto?: boolean;
+  /** Moeda em que todos os valores são mostrados. Ausente = MOEDA_PADRAO. */
+  moeda?: CodigoMoeda;
   /** Categorias editáveis pelo utilizador. Ausentes = usa os defaults genéricos. */
   categoriasTarefas?: string[];
   categoriasEntrada?: string[];
@@ -80,11 +83,6 @@ export interface ContaPagar {
 }
 
 // ── Helpers ──
-export const fmt = (n: number) =>
-  new Intl.NumberFormat("pt-PT", { style: "currency", currency: "AOA" }).format(n);
-
-export const fmtMasked = (n: number, oculto: boolean) => oculto ? "••••••" : fmt(n);
-
 export const today = () => new Date().toISOString().split("T")[0];
 export const uid = () => Math.random().toString(36).slice(2, 8);
 export const diasAtras = (data: string) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
@@ -260,6 +258,7 @@ export const DEFAULT_CONFIG: Configuracoes = {
   notificacoesAtivas: false,
   ocultarValores: false,
   onboardingCompleto: false,
+  moeda: MOEDA_PADRAO,
 };
 
 /** Sugestões de negócio mostradas no assistente inicial. */

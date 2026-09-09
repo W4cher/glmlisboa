@@ -40,7 +40,7 @@ A app organiza-se em oito separadores (`src/components/garcia/`):
 | **Negócios** | `TabNegocios.tsx` + `StockSection.tsx` | Um cartão por negócio com receita, gastos, meta, notas, registo de vendas e gestão de stock (quantidade, custo unitário, preço de venda). |
 | **Aprendizado** | `TabAprendizado.tsx` | Áreas de estudo com objectivo, tópicos e notas. |
 | **Finanças** | `TabFinancas.tsx` | Entradas e saídas por categoria, com gráficos (Recharts). |
-| **Configurações** | `TabConfig.tsx` | Nome do utilizador, notificações e modo "ocultar valores". |
+| **Configurações** | `TabConfig.tsx` | Nome, moeda, categorias personalizadas, notificações e modo "ocultar valores". |
 
 Transversais:
 
@@ -49,6 +49,10 @@ Transversais:
   útil para usar a app em público.
 - **Notificações** do browser (`src/lib/notifications.ts`).
 - **Gravação automática** com *debounce* de 500 ms por chave de dados.
+- **Moeda à escolha** — 9 moedas com o respectivo símbolo (`src/lib/moeda.ts`). A moeda
+  activa é distribuída por contexto React; os componentes usam `useFmt()` e
+  `useFmtMasked()` em vez de um formatador fixo. Os valores são guardados como números
+  simples, sem conversão de câmbio: mudar de moeda reescreve o símbolo, não converte.
 
 ## Stack
 
@@ -117,6 +121,7 @@ src/
 │   └── ui/                    # shadcn/ui
 ├── lib/
 │   ├── garcia.ts              # tipos, helpers, constantes, load() e save()
+│   ├── moeda.ts               # moedas suportadas, formatação e contexto React
 │   ├── notifications.ts
 │   ├── icons.tsx
 │   └── mcp/                   # servidor MCP: index.ts, supabase.ts, tools/
@@ -174,6 +179,18 @@ mensagem legível.
 `src/lib/mcp/`. Não editar à mão — alterar as ferramentas em `src/lib/mcp/tools/` e
 deixar o plugin regenerar.
 
+> ⚠️ **Em Windows a regeneração falha.** Correr `npm run dev` ou `npm run build` localmente
+> substitui este ficheiro por um esboço com um caminho absoluto
+> (`import mcp from "npm:D:\..."`), o que parte a função em produção. Antes de cada
+> commit, verificar:
+>
+> ```bash
+> git diff --stat supabase/functions/mcp/index.ts
+> ```
+>
+> Se aparecerem centenas de linhas removidas, é isto — `git checkout -- supabase/functions/mcp/index.ts`
+> e aplicar as alterações à mão, ou deixar o Lovable regenerar do lado dele.
+
 ## Servidor MCP
 
 A app expõe as suas próprias ferramentas MCP, o que permite controlá-la a partir de um
@@ -224,10 +241,10 @@ Regras práticas:
 
 Direcção do produto: passar de ferramenta pessoal a serviço para pequenos empreendedores.
 
-- [ ] **Multi-moeda** — AOA, EUR, USD e outras, escolhidas pelo utilizador, em vez do
-      `AOA` fixo no helper `fmt()`
-- [ ] **Onboarding genérico** — remover negócios, categorias e rotina pré-preenchidos com
-      dados pessoais; deixar o utilizador definir os seus
+- [x] **Multi-moeda** — 9 moedas (AOA, EUR, USD, BRL, MZN, CVE, ZAR, GBP, NGN) com o
+      respectivo símbolo, escolhidas no onboarding e em Configurações — ver `src/lib/moeda.ts`
+- [x] **Onboarding genérico** — assistente inicial de 4 passos; negócios, rotina e
+      categorias deixaram de vir pré-preenchidos e são definidos pelo utilizador
 - [ ] **Internacionalização** — português e inglês
 - [ ] **Tema claro e escuro** — `next-themes` já está instalado, falta expor o selector
 - [ ] **Diálogos próprios** — substituir os `confirm()` nativos por `AlertDialog`

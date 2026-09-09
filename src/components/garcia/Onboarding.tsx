@@ -4,12 +4,14 @@ import {
   BlocoRotina, Negocio, NegocioCfg, TipoNegocio,
   blocosDoModelo, negocioVazio, uid,
 } from "@/lib/garcia";
+import { MOEDAS, MOEDA_PADRAO, type CodigoMoeda } from "@/lib/moeda";
 import { Icon } from "@/lib/icons";
 import { GBtn } from "./SharedComponents";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Sparkles } from "lucide-react";
 
 export interface DadosOnboarding {
   nome: string;
+  moeda: CodigoMoeda;
   negociosCfg: NegocioCfg[];
   negocios: Record<string, Negocio>;
   blocos: BlocoRotina[];
@@ -24,6 +26,7 @@ const PASSOS = ["Bem-vindo", "Negócios", "Rotina", "Pronto"];
 export default function Onboarding({ onConcluir }: Props) {
   const [passo, setPasso] = useState(0);
   const [nome, setNome] = useState("");
+  const [moeda, setMoeda] = useState<CodigoMoeda>(MOEDA_PADRAO);
   const [escolhidos, setEscolhidos] = useState<NegocioCfg[]>([]);
   const [modeloRotina, setModeloRotina] = useState<string>("");
 
@@ -59,6 +62,7 @@ export default function Onboarding({ onConcluir }: Props) {
     const modelo = MODELOS_ROTINA.find(m => m.id === modeloRotina);
     onConcluir({
       nome: nome.trim(),
+      moeda,
       negociosCfg: escolhidos,
       negocios,
       blocos: modelo ? blocosDoModelo(modelo) : [],
@@ -120,6 +124,40 @@ export default function Onboarding({ onConcluir }: Props) {
             />
             <p className="text-xs text-muted-foreground mt-2">
               Serve só para te tratar pelo nome dentro da app.
+            </p>
+
+            <label className="block text-[11px] text-muted-foreground mt-6 mb-1.5">
+              Em que moeda trabalhas?
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {MOEDAS.map(m => {
+                const activo = moeda === m.codigo;
+                return (
+                  <button
+                    key={m.codigo}
+                    onClick={() => setMoeda(m.codigo)}
+                    className="text-left rounded-xl px-3 py-2.5 cursor-pointer border transition-all"
+                    style={{
+                      borderColor: activo ? "hsl(var(--primary))" : "hsl(var(--border))",
+                      background: activo ? "hsl(var(--garcia-accent-soft))" : "hsl(var(--card))",
+                    }}
+                  >
+                    <span className="flex items-baseline gap-1.5">
+                      <span
+                        className="font-extrabold text-base"
+                        style={{ color: activo ? "hsl(var(--primary))" : "hsl(var(--foreground))" }}
+                      >
+                        {m.simbolo}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{m.codigo}</span>
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground truncate">{m.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Todos os valores da app passam a aparecer nesta moeda. Podes mudar depois.
             </p>
           </div>
         )}
@@ -322,6 +360,15 @@ export default function Onboarding({ onConcluir }: Props) {
                     {escolhidos.length > 0
                       ? escolhidos.map(e => e.nome).join(", ")
                       : "Nenhum por agora — crias no separador Negócios."}
+                  </div>
+                </div>
+              </div>
+              <div className="px-4 py-3 flex items-start gap-3">
+                <Check size={16} className="text-[hsl(var(--garcia-green))] mt-0.5 shrink-0" />
+                <div className="text-sm">
+                  <div className="font-semibold">Moeda</div>
+                  <div className="text-muted-foreground text-xs">
+                    {MOEDAS.find(m => m.codigo === moeda)?.nome} ({MOEDAS.find(m => m.codigo === moeda)?.simbolo})
                   </div>
                 </div>
               </div>

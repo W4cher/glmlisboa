@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, fmt, fmtMasked, negocioVazio, uid, today } from "@/lib/garcia";
+import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, negocioVazio, uid, today } from "@/lib/garcia";
+import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
 import StockSection from "./StockSection";
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNegociosCfg, ocultarValores = false }: Props) {
+  const fmt = useFmt();
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const [sel, setSel] = useState(negociosCfg[0]?.id || "");
   const [showForm, setShowForm] = useState(false);
   const [showAddNeg, setShowAddNeg] = useState(false);
@@ -192,7 +196,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
             {!recorrente && (
               <div className="mb-4">
-                <NumInput label="Meta do mês" value={n.meta || 0} onChange={v => upd("meta", v)} />
+                <NumInput label={`Meta do mês (${simbolo})`} value={n.meta || 0} onChange={v => upd("meta", v)} />
                 {(n.meta || 0) > 0 && (
                   <div className="mt-2">
                     <div className="flex justify-between mb-1.5 text-[13px]">
@@ -226,8 +230,8 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: iPhone 13" />
-                  <GInput label="Valor unitário (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
-                  {tipo === "venda" && <GInput label="Custo unitário (AOA)" value={form.custo} onChange={v => setForm({ ...form, custo: v })} type="number" placeholder="0" />}
+                  <GInput label={`Valor unitário (${simbolo})*`} value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
+                  {tipo === "venda" && <GInput label={`Custo unitário (${simbolo})`} value={form.custo} onChange={v => setForm({ ...form, custo: v })} type="number" placeholder="0" />}
                   <GInput label="Quantidade" value={form.qty} onChange={v => setForm({ ...form, qty: v })} type="number" placeholder="1" />
                   {tipo === "venda" && <GInput label="Cliente" value={form.cliente} onChange={v => setForm({ ...form, cliente: v })} placeholder="Nome do cliente" />}
                   <GInput label="Data" value={form.data} onChange={v => setForm({ ...form, data: v })} type="date" />

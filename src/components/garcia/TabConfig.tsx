@@ -4,8 +4,9 @@ import {
 } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GBtn } from "./SharedComponents";
 import ListaCategorias from "./ListaCategorias";
+import { MOEDAS, MOEDA_PADRAO, fmtMoeda, type CodigoMoeda } from "@/lib/moeda";
 import { ensureNotifPermission, notify } from "@/lib/notifications";
-import { Settings, Bell, Eye, User, BellRing, Tags } from "lucide-react";
+import { Settings, Bell, Eye, User, BellRing, Tags, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +39,41 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
       <GCard className="mb-4">
         <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><User size={16} /> Identidade</div>
         <GInput label="O teu nome (aparece na app)" value={config.nome} onChange={v => setConfig({ ...config, nome: v })} placeholder="O teu primeiro nome" />
+      </GCard>
+
+      <GCard className="mb-4">
+        <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><Coins size={16} /> Moeda</div>
+        <div className="text-xs text-muted-foreground mb-3">
+          Todos os valores da app — vendas, dívidas, contas, stock e finanças — passam a ser
+          mostrados nesta moeda. Os números que já registaste não são convertidos, apenas
+          reescritos com o novo símbolo.
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {MOEDAS.map(m => {
+            const activo = (config.moeda ?? MOEDA_PADRAO) === m.codigo;
+            return (
+              <button key={m.codigo}
+                onClick={() => setConfig({ ...config, moeda: m.codigo as CodigoMoeda })}
+                className="text-left rounded-lg px-3 py-2 cursor-pointer border transition-all"
+                style={{
+                  borderColor: activo ? "hsl(var(--primary))" : "hsl(var(--border))",
+                  background: activo ? "hsl(var(--garcia-accent-soft))" : "hsl(var(--garcia-surface-hi))",
+                }}>
+                <span className="flex items-baseline gap-1.5">
+                  <span className="font-extrabold text-sm"
+                    style={{ color: activo ? "hsl(var(--primary))" : "hsl(var(--foreground))" }}>
+                    {m.simbolo}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{m.codigo}</span>
+                </span>
+                <span className="block text-[10px] text-muted-foreground truncate">{m.nome}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-[11px] text-muted-foreground mt-3">
+          Exemplo: <span className="text-foreground font-semibold">{fmtMoeda(1500, config.moeda)}</span>
+        </div>
       </GCard>
 
       <GCard className="mb-4">

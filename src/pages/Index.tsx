@@ -7,6 +7,7 @@ import {
   APP_NAME, diasAtras,
 } from "@/lib/garcia";
 import Onboarding, { DadosOnboarding } from "@/components/garcia/Onboarding";
+import { MoedaCtx, getMoeda } from "@/lib/moeda";
 import TabRotina from "@/components/garcia/TabRotina";
 import TabTarefas from "@/components/garcia/TabTarefas";
 import TabDevedores from "@/components/garcia/TabDevedores";
@@ -152,7 +153,7 @@ export default function Index() {
     setNegociosCfg(dados.negociosCfg);
     setNegocios(dados.negocios);
     setBlocos(dados.blocos);
-    setConfig(prev => ({ ...prev, nome: dados.nome, onboardingCompleto: true }));
+    setConfig(prev => ({ ...prev, nome: dados.nome, moeda: dados.moeda, onboardingCompleto: true }));
     setPrecisaOnboarding(false);
     setTab(dados.negociosCfg.length > 0 ? "negocios" : "rotina");
   };
@@ -193,6 +194,7 @@ export default function Index() {
   const nomeApp = config.nome || APP_NAME;
 
   return (
+    <MoedaCtx.Provider value={getMoeda(config.moeda).codigo}>
     <div className="bg-background min-h-screen font-sans text-foreground">
       <div className="bg-card border-b border-border px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold text-primary-foreground shrink-0"
@@ -245,6 +247,7 @@ export default function Index() {
         {tab === "config" && <TabConfig config={config} setConfig={setConfig} onLogout={handleLogout} />}
       </div>
     </div>
+    </MoedaCtx.Provider>
   );
 }
 

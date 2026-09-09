@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Financas, Configuracoes, uid, today, fmt, fmtMasked, CATS_ENTRADA, CATS_SAIDA, catsOu } from "@/lib/garcia";
+import { Financas, Configuracoes, uid, today, CATS_ENTRADA, CATS_SAIDA, catsOu } from "@/lib/garcia";
+import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { Wallet, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
 interface Props { finanas: Financas; setFinanas: (v: Financas) => void; ocultarValores?: boolean; config?: Configuracoes; }
 
 export default function TabFinancas({ finanas, setFinanas, ocultarValores = false, config }: Props) {
+  const fmt = useFmt();
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const catsEntrada = catsOu(config?.categoriasEntrada, CATS_ENTRADA);
   const catsSaida = catsOu(config?.categoriasSaida, CATS_SAIDA);
   const [tipo, setTipo] = useState<"entrada" | "saida">("entrada");
@@ -59,7 +63,7 @@ export default function TabFinancas({ finanas, setFinanas, ocultarValores = fals
         <GCard className="mb-4">
           <div className="grid grid-cols-2 gap-3">
             <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: Venda do dia, salário, renda recebida" />
-            <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" />
+            <GInput label={`Valor (${simbolo})*`} value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" />
             <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={tipo === "entrada" ? catsEntrada : catsSaida} />
             <GInput label="Data" value={form.data} onChange={v => setForm({ ...form, data: v })} type="date" />
           </div>
@@ -85,6 +89,7 @@ export default function TabFinancas({ finanas, setFinanas, ocultarValores = fals
 }
 
 function FinRow({ i, color, sign, oculto, onDel }: { i: { descricao: string; valor: number; categoria: string; data: string }; color: string; sign: string; oculto: boolean; onDel: () => void }) {
+  const fmtMasked = useFmtMasked();
   return (
     <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-3.5 py-2.5">
       <div className="flex-1">

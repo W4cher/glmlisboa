@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Devedor, Negocio, NegocioCfg, LogEntry, enforceLogLimits, uid, today, fmt, fmtMasked } from "@/lib/garcia";
+import { Devedor, Negocio, NegocioCfg, LogEntry, enforceLogLimits, uid, today } from "@/lib/garcia";
+import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { Wallet, CreditCard, Trash2, Pencil, Check, X, AlertTriangle, Briefcase } from "lucide-react";
 
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export default function TabDevedores({ devedores, setDevedores, negocios, setNegocios, negociosCfg, ocultarValores = false }: Props) {
+  const fmt = useFmt();
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const [form, setForm] = useState({ nome: "", valor: "", produto: "", data: today(), notas: "", negocio: negociosCfg[0]?.id || "" });
   const [showForm, setShowForm] = useState(false);
   const [pagandoId, setPagandoId] = useState<string | null>(null);
@@ -113,7 +117,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
         <GCard className="mt-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <GInput label="Nome*" value={form.nome} onChange={v => setForm({ ...form, nome: v })} placeholder="Nome do cliente" />
-            <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
+            <GInput label={`Valor (${simbolo})*`} value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
             <GInput label="Produto/Serviço" value={form.produto} onChange={v => setForm({ ...form, produto: v })} placeholder="Ex: iPhone 13" />
             <GInput label="Data da dívida" value={form.data} onChange={v => setForm({ ...form, data: v })} type="date" />
             <GSelect label="Negócio associado" value={form.negocio} onChange={v => setForm({ ...form, negocio: v })} options={negocioOptions} />
@@ -182,6 +186,8 @@ function DevedorRow({
   isEdit: boolean; editForm: Partial<Devedor>; setEditForm: (v: Partial<Devedor>) => void;
   onStartEdit: () => void; onSaveEdit: () => void; onCancelEdit: () => void;
 }) {
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const dias = Math.floor((Date.now() - new Date(d.data).getTime()) / 86400000);
   const urgente = dias > 30 && !done;
 
@@ -190,7 +196,7 @@ function DevedorRow({
       <GCard>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <GInput label="Nome" value={editForm.nome || ""} onChange={v => setEditForm({ ...editForm, nome: v })} />
-          <GInput label="Valor (AOA)" value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
+          <GInput label={`Valor (${simbolo})`} value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
           <GInput label="Produto" value={editForm.produto || ""} onChange={v => setEditForm({ ...editForm, produto: v })} />
           <GSelect label="Negócio" value={editForm.negocio || ""} onChange={v => setEditForm({ ...editForm, negocio: v })} options={negocioOptions} />
         </div>
@@ -231,7 +237,7 @@ function DevedorRow({
       </div>
       {isPagando && (
         <div className="mt-3 flex gap-2 items-end border-t border-border pt-3">
-          <GInput label="Valor do pagamento (AOA)" value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${d.valor}`} />
+          <GInput label={`Valor do pagamento (${simbolo})`} value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${d.valor}`} />
           <GBtn onClick={onConfirmarPagamento} color="hsl(var(--garcia-green))">Confirmar</GBtn>
           <GBtn onClick={onPagar} color="hsl(var(--muted))">Cancelar</GBtn>
         </div>

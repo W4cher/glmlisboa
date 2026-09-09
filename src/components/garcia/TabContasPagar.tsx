@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ContaPagar, Configuracoes, CATS_CONTAS_PAGAR, uid, today, fmtMasked, diasAtras, catsOu } from "@/lib/garcia";
+import { ContaPagar, Configuracoes, CATS_CONTAS_PAGAR, uid, today, diasAtras, catsOu } from "@/lib/garcia";
+import { useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { CreditCard, Trash2, Pencil, Check, X, AlertTriangle, Receipt } from "lucide-react";
 
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default function TabContasPagar({ contas, setContas, ocultarValores = false, config }: Props) {
+  const fmtMasked = useFmtMasked();
+  const simbolo = useSimbolo();
   const categorias = catsOu(config?.categoriasContas, CATS_CONTAS_PAGAR);
   const [form, setForm] = useState({ descricao: "", credor: "", valor: "", categoria: categorias[0], prazo: today(), notas: "" });
   const [showForm, setShowForm] = useState(false);
@@ -85,7 +88,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: Fornecedor peças" />
             <GInput label="Credor" value={form.credor} onChange={v => setForm({ ...form, credor: v })} placeholder="A quem devo" />
-            <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
+            <GInput label={`Valor (${simbolo})*`} value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
             <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={categorias} />
             <GInput label="Prazo" value={form.prazo} onChange={v => setForm({ ...form, prazo: v })} type="date" />
           </div>
@@ -112,7 +115,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <GInput label="Descrição" value={editForm.descricao || ""} onChange={v => setEditForm({ ...editForm, descricao: v })} />
                   <GInput label="Credor" value={editForm.credor || ""} onChange={v => setEditForm({ ...editForm, credor: v })} />
-                  <GInput label="Valor" value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
+                  <GInput label={`Valor (${simbolo})`} value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
                   <GSelect label="Categoria" value={editForm.categoria || ""} onChange={v => setEditForm({ ...editForm, categoria: v })} options={categorias} />
                   <GInput label="Prazo" value={editForm.prazo || ""} onChange={v => setEditForm({ ...editForm, prazo: v })} type="date" />
                 </div>
@@ -154,7 +157,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
               </div>
               {pagandoId === c.id && (
                 <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:items-end border-t border-border pt-3">
-                  <div className="flex-1"><GInput label="Valor do pagamento (AOA)" value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${c.valor}`} /></div>
+                  <div className="flex-1"><GInput label={`Valor do pagamento (${simbolo})`} value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${c.valor}`} /></div>
                   <div className="flex gap-2">
                     <GBtn onClick={() => registarPagamento(c)} color="hsl(var(--garcia-green))">Confirmar</GBtn>
                     <GBtn onClick={() => setPagandoId(null)} color="hsl(var(--muted))">Cancelar</GBtn>
