@@ -6,8 +6,11 @@ import { SectionHeader, GCard, GInput, GBtn } from "./SharedComponents";
 import ListaCategorias from "./ListaCategorias";
 import { MOEDAS, MOEDA_PADRAO, fmtMoeda, type CodigoMoeda } from "@/lib/moeda";
 import { ensureNotifPermission, notify } from "@/lib/notifications";
-import { Settings, Bell, Eye, User, BellRing, Tags, Coins, Sun, Moon, Monitor } from "lucide-react";
+import { Settings, Bell, Eye, User, BellRing, Tags, Coins, Sun, Moon, Monitor, Database, Download, Upload } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useRef, useState } from "react";
+import { exportarDados, descarregarBackup, lerFicheiroBackup, importarDados, type Backup } from "@/lib/backup";
+import ConfirmarDialog from "./ConfirmarDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +29,48 @@ const TEMAS = [
 export default function TabConfig({ config, setConfig, onLogout }: Props) {
   const { theme, setTheme } = useTheme();
   const temaActivo = theme ?? "dark";
+
+  const inputFicheiro = useRef<HTMLInputElement>(null);
+  const [aExportar, setAExportar] = useState(false);
+  const [porImportar, setPorImportar] = useState<Backup | null>(null);
+  const [aImportar, setAImportar] = useState(false);
+
+  const exportar = async () => {
+    setAExportar(true);
+    try {
+      const b = await exportarDados();
+      descarregarBackup(b);
+      toast.success(`Backup criado com ${Object.keys(b.chaves).length} secções de dados`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível exportar");
+    } finally {
+      setAExportar(false);
+    }
+  };
+
+  const escolherFicheiro = async (f: File | undefined) => {
+    if (!f) return;
+    try {
+      setPorImportar(await lerFicheiroBackup(f));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Ficheiro inválido");
+    }
+  };
+
+  const confirmarImport = async () => {
+    if (!porImportar) return;
+    setAImportar(true);
+    try {
+      const n = await importarDados(porImportar);
+      toast.success(`${n} secções importadas. A recarregar...`);
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível importar");
+      setAImportar(false);
+    } finally {
+      setPorImportar(null);
+    }
+  };
   const ativarNotifs = async () => {
     const ok = await ensureNotifPermission();
     if (ok) {
@@ -169,10 +214,49 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
         </label>
       </GCard>
 
+      <GCard className="mb-4">
+        <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><Database size={16} /> Os teus dados</div>
+        <div className="text-xs text-muted-foreground mb-3">
+          Guarda uma cópia de tudo o que tens na app num ficheiro, ou repõe a partir de uma
+          cópia anterior. Serve de backup e para mudares de conta ou de servidor.
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <GBtn onClick={exportar} color="hsl(var(--garcia-blue))">
+            <Download size={14} /> {aExportar ? "A exportar..." : "Exportar"}
+          </GBtn>
+          <GBtn onClick={() => inputFicheiro.current?.click()} color="hsl(var(--garcia-neutral))">
+            <Upload size={14} /> Importar
+          </GBtn>
+          <input
+            ref={inputFicheiro}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={e => { escolherFicheiro(e.target.files?.[0]); e.target.value = ""; }}
+          />
+        </div>
+      </GCard>
+
       <GCard>
         <div className="font-semibold text-sm mb-3">Sessão</div>
         <GBtn onClick={onLogout} color="hsl(var(--garcia-red))">Terminar sessão</GBtn>
       </GCard>
+
+      <ConfirmarDialog
+        aberto={porImportar !== null}
+        titulo="Importar e substituir?"
+        descricao={
+          porImportar
+            ? `O ficheiro tem ${Object.keys(porImportar.chaves).length} secções` +
+              (porImportar.exportadoEm ? `, de ${porImportar.exportadoEm.slice(0, 10)}` : "") +
+              ". As secções que existirem nesta conta são substituídas pelas do ficheiro. Não há como desfazer — exporta primeiro se tiveres dúvidas."
+            : ""
+        }
+        textoConfirmar={aImportar ? "A importar..." : "Importar"}
+        destrutivo
+        onConfirmar={confirmarImport}
+        onCancelar={() => setPorImportar(null)}
+      />
     </div>
   );
 }
