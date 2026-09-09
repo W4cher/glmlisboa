@@ -180,6 +180,23 @@ utilizadores. Por isso o **núcleo de negócio já foi movido para tabelas próp
 | `stock_items` | stock por projecto |
 | `activity_log` | quem fez o quê, para o feed de colaboração |
 
+### Sincronização
+
+Enquanto a app ainda grava em `user_data`, a função
+`sincronizar_negocios_de_user_data(user_id)` traz para as tabelas tudo o que tenha sido
+registado desde a última vez. É repetível e não duplica nada — as transações e os itens
+de stock são casados pelo `legacy_id` que tinham dentro do JSON.
+
+Deve correr **imediatamente antes** de a app passar a ler das tabelas, para fechar a
+janela entre a migração e a troca. Enquanto houver gente a usar a versão antiga, essa
+janela existe.
+
+A invariante que a torna segura: `receita_legado` é `total_no_json − soma_das_transações`.
+Uma venda nova aumenta os dois na mesma medida, por isso recalcular dá sempre o mesmo
+valor e o total reconstruído nunca se desvia.
+
+### Acesso
+
 O acesso é decidido por três funções `SECURITY DEFINER` — `pode_ver_projecto`,
 `pode_editar_projecto` e `e_dono_do_projecto` — chamadas de dentro das políticas RLS.
 Têm de ser `SECURITY DEFINER` para poderem ler `project_members` sem reentrar nas
