@@ -127,7 +127,7 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={add} color="hsl(var(--primary))">Guardar</GBtn>
-            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -203,7 +203,7 @@ function DevedorRow({
         <div className="mt-2.5"><GInput label="Notas" value={editForm.notas || ""} onChange={v => setEditForm({ ...editForm, notas: v })} /></div>
         <div className="mt-3 flex gap-2">
           <GBtn onClick={onSaveEdit} color="hsl(var(--garcia-green))"><Check size={14} /> Guardar</GBtn>
-          <GBtn onClick={onCancelEdit} color="hsl(var(--muted))"><X size={14} /> Cancelar</GBtn>
+          <GBtn onClick={onCancelEdit} color="hsl(var(--garcia-neutral))"><X size={14} /> Cancelar</GBtn>
         </div>
       </GCard>
     );
@@ -239,7 +239,7 @@ function DevedorRow({
         <div className="mt-3 flex gap-2 items-end border-t border-border pt-3">
           <GInput label={`Valor do pagamento (${simbolo})`} value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${d.valor}`} />
           <GBtn onClick={onConfirmarPagamento} color="hsl(var(--garcia-green))">Confirmar</GBtn>
-          <GBtn onClick={onPagar} color="hsl(var(--muted))">Cancelar</GBtn>
+          <GBtn onClick={onPagar} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
         </div>
       )}
     </div>

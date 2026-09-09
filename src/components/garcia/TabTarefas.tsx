@@ -43,7 +43,7 @@ export default function TabTarefas({ tarefas, setTarefas, config }: Props) {
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={add} color="hsl(var(--primary))">Adicionar</GBtn>
-            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}

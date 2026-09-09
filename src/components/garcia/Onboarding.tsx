@@ -274,7 +274,7 @@ export default function Onboarding({ onConcluir }: Props) {
                 </div>
                 <div className="flex gap-2">
                   <GBtn onClick={criarManual} color="hsl(var(--primary))">Adicionar</GBtn>
-                  <GBtn onClick={() => setACriar(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+                  <GBtn onClick={() => setACriar(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
                 </div>
               </div>
             ) : (

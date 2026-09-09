@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AprendizadoArea, APRENDIZADO_ICONS, uid } from "@/lib/garcia";
+import ConfirmarDialog from "./ConfirmarDialog";
 import { SectionHeader, GCard, GInput, GBtn, Empty } from "./SharedComponents";
 import { Icon } from "@/lib/icons";
 import { GraduationCap, Plus, Trash2, Check } from "lucide-react";
@@ -15,6 +16,7 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
   const [novoObjetivo, setNovoObjetivo] = useState("");
   const [novoIcon, setNovoIcon] = useState("graduation-cap");
   const [novoTopico, setNovoTopico] = useState<Record<string, string>>({});
+  const [areaAApagar, setAreaAApagar] = useState<string | null>(null);
 
   const addArea = () => {
     if (!novoNome.trim()) return;
@@ -23,9 +25,10 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
     setShowAdd(false);
   };
 
-  const delArea = (id: string) => {
-    if (!confirm("Apagar esta área de aprendizado?")) return;
-    setAreas(areas.filter(a => a.id !== id));
+  const confirmarApagarArea = () => {
+    if (!areaAApagar) return;
+    setAreas(areas.filter(a => a.id !== areaAApagar));
+    setAreaAApagar(null);
   };
 
   const addTopico = (areaId: string) => {
@@ -75,7 +78,7 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={addArea} color="hsl(var(--garcia-purple))">Criar</GBtn>
-            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -104,7 +107,7 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
                     <div className="h-full rounded-sm bg-[hsl(var(--garcia-purple))]" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-                <button onClick={() => delArea(a.id)} className="text-muted-foreground hover:text-destructive bg-transparent border-none cursor-pointer">
+                <button onClick={() => setAreaAApagar(a.id)} className="text-muted-foreground hover:text-destructive bg-transparent border-none cursor-pointer">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -144,6 +147,16 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
           );
         })}
       </div>
+
+      <ConfirmarDialog
+        aberto={areaAApagar !== null}
+        titulo="Apagar esta área de aprendizado?"
+        descricao="Os tópicos e as notas desta área são apagados e não há forma de os recuperar."
+        textoConfirmar="Apagar"
+        destrutivo
+        onConfirmar={confirmarApagarArea}
+        onCancelar={() => setAreaAApagar(null)}
+      />
     </div>
   );
 }

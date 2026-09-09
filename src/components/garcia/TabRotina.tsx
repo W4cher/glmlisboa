@@ -117,7 +117,7 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
       <div className="flex gap-2 mb-4 flex-wrap">
         <GBtn onClick={() => setShowAI(!showAI)} color="hsl(var(--garcia-purple))"><Sparkles size={14} /> Gerar com IA</GBtn>
         <GBtn onClick={() => setShowAdd(!showAdd)} color="hsl(var(--primary))"><Plus size={14} /> Bloco</GBtn>
-        <GBtn onClick={() => setShowModelos(!showModelos)} color="hsl(var(--muted))"><LayoutTemplate size={14} /> Modelos</GBtn>
+        <GBtn onClick={() => setShowModelos(!showModelos)} color="hsl(var(--garcia-neutral))"><LayoutTemplate size={14} /> Modelos</GBtn>
       </div>
 
       {showModelos && (
@@ -141,7 +141,7 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
             ))}
           </div>
           <div className="mt-3">
-            <GBtn onClick={() => setShowModelos(false)} color="hsl(var(--muted))" small>Cancelar</GBtn>
+            <GBtn onClick={() => setShowModelos(false)} color="hsl(var(--garcia-neutral))" small>Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -158,7 +158,7 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
             className="w-full bg-garcia-surface-hi border border-border rounded-lg text-foreground px-3 py-2.5 text-[13px] min-h-[70px] resize-y" />
           <div className="mt-3 flex gap-2">
             <GBtn onClick={gerarComIA} color="hsl(var(--garcia-purple))">{loading ? "A pensar..." : "Gerar rotina"}</GBtn>
-            <GBtn onClick={() => setShowAI(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowAI(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -185,7 +185,7 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={addBloco} color="hsl(var(--primary))">Adicionar</GBtn>
-            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}

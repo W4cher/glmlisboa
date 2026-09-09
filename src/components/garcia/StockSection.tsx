@@ -113,7 +113,7 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
           )}
           <div className="mt-3 flex gap-2">
             <GBtn onClick={addItem} color="hsl(var(--garcia-blue))">Adicionar</GBtn>
-            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowAdd(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -135,7 +135,7 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
                   </div>
                   <div className="mt-3 flex gap-2">
                     <GBtn onClick={saveEdit} color="hsl(var(--garcia-green))"><Check size={14} /> Guardar</GBtn>
-                    <GBtn onClick={() => { setEditId(null); setEditForm({}); }} color="hsl(var(--muted))"><X size={14} /> Cancelar</GBtn>
+                    <GBtn onClick={() => { setEditId(null); setEditForm({}); }} color="hsl(var(--garcia-neutral))"><X size={14} /> Cancelar</GBtn>
                   </div>
                 </GCard>
               );
@@ -163,14 +163,14 @@ export default function StockSection({ stock, stockTotal, stockCustoTotal, stock
                   <div className="mt-2 flex gap-2 items-end border-t border-border pt-2">
                     <GInput label="Adicionar quantidade" value={addQtyVal} onChange={setAddQtyVal} type="number" placeholder="1" />
                     <GBtn onClick={() => handleAddQty(item)} color="hsl(var(--garcia-blue))">Confirmar</GBtn>
-                    <GBtn onClick={() => setAddQtyId(null)} color="hsl(var(--muted))">Cancelar</GBtn>
+                    <GBtn onClick={() => setAddQtyId(null)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
                   </div>
                 )}
                 {sellId === item.id && (
                   <div className="mt-2 flex gap-2 items-end border-t border-border pt-2">
                     <GInput label={`Quantidade (max: ${item.quantidade})`} value={sellQty} onChange={setSellQty} type="number" placeholder="1" />
                     <GBtn onClick={() => handleSell(item)} color="hsl(var(--garcia-green))">Confirmar Venda</GBtn>
-                    <GBtn onClick={() => setSellId(null)} color="hsl(var(--muted))">Cancelar</GBtn>
+                    <GBtn onClick={() => setSellId(null)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
                   </div>
                 )}
               </div>

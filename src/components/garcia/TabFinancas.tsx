@@ -69,7 +69,7 @@ export default function TabFinancas({ finanas, setFinanas, ocultarValores = fals
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={add} color={tipo === "entrada" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"}>Guardar</GBtn>
-            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}

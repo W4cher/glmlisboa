@@ -6,7 +6,8 @@ import { SectionHeader, GCard, GInput, GBtn } from "./SharedComponents";
 import ListaCategorias from "./ListaCategorias";
 import { MOEDAS, MOEDA_PADRAO, fmtMoeda, type CodigoMoeda } from "@/lib/moeda";
 import { ensureNotifPermission, notify } from "@/lib/notifications";
-import { Settings, Bell, Eye, User, BellRing, Tags, Coins } from "lucide-react";
+import { Settings, Bell, Eye, User, BellRing, Tags, Coins, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,7 +17,15 @@ interface Props {
   onLogout: () => void;
 }
 
+const TEMAS = [
+  { id: "light", label: "Claro", icon: Sun },
+  { id: "dark", label: "Escuro", icon: Moon },
+  { id: "system", label: "Sistema", icon: Monitor },
+] as const;
+
 export default function TabConfig({ config, setConfig, onLogout }: Props) {
+  const { theme, setTheme } = useTheme();
+  const temaActivo = theme ?? "dark";
   const ativarNotifs = async () => {
     const ok = await ensureNotifPermission();
     if (ok) {
@@ -39,6 +48,31 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
       <GCard className="mb-4">
         <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><User size={16} /> Identidade</div>
         <GInput label="O teu nome (aparece na app)" value={config.nome} onChange={v => setConfig({ ...config, nome: v })} placeholder="O teu primeiro nome" />
+      </GCard>
+
+      <GCard className="mb-4">
+        <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><Sun size={16} /> Aspecto</div>
+        <div className="text-xs text-muted-foreground mb-3">
+          "Sistema" segue a definição do teu telemóvel ou computador.
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {TEMAS.map(t => {
+            const TIcon = t.icon;
+            const activo = temaActivo === t.id;
+            return (
+              <button key={t.id} onClick={() => setTheme(t.id)}
+                className="rounded-lg px-3 py-2.5 cursor-pointer border transition-all flex flex-col items-center gap-1.5"
+                style={{
+                  borderColor: activo ? "hsl(var(--primary))" : "hsl(var(--border))",
+                  background: activo ? "hsl(var(--garcia-accent-soft))" : "hsl(var(--garcia-surface-hi))",
+                  color: activo ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+                }}>
+                <TIcon size={17} />
+                <span className="text-[11px] font-semibold">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </GCard>
 
       <GCard className="mb-4">
@@ -85,7 +119,7 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
         {config.notificacoesAtivas ? (
           <div className="flex gap-2 items-center">
             <span className="text-[hsl(var(--garcia-green))] text-sm inline-flex items-center gap-1.5"><BellRing size={14} /> Activas</span>
-            <GBtn onClick={desativarNotifs} color="hsl(var(--muted))" small>Desativar</GBtn>
+            <GBtn onClick={desativarNotifs} color="hsl(var(--garcia-neutral))" small>Desativar</GBtn>
             <GBtn onClick={() => notify("Teste", "As notificações estão a funcionar!")} color="hsl(var(--garcia-blue))" small>Testar</GBtn>
           </div>
         ) : (

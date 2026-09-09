@@ -49,6 +49,10 @@ Transversais:
   útil para usar a app em público.
 - **Notificações** do browser (`src/lib/notifications.ts`).
 - **Gravação automática** com *debounce* de 500 ms por chave de dados.
+- **Tema claro, escuro ou do sistema** — o escuro é o predefinido. As duas paletas
+  vivem em `src/index.css` (`:root` para o claro, `.dark` para o escuro) e todos os
+  pares de cor usados passam WCAG AA (4.5:1) no tema claro. Um script inline no
+  `index.html` aplica o tema antes da primeira pintura, para não haver flash branco.
 - **Moeda à escolha** — 9 moedas com o respectivo símbolo (`src/lib/moeda.ts`). A moeda
   activa é distribuída por contexto React; os componentes usam `useFmt()` e
   `useFmtMasked()` em vez de um formatador fixo. Os valores são guardados como números
@@ -248,8 +252,9 @@ Direcção do produto: passar de ferramenta pessoal a serviço para pequenos emp
 - [x] **Histórico completo** — o registo de transações deixou de ser truncado na
       gravação; o limite passou para a apresentação, com "ver tudo"
 - [ ] **Internacionalização** — português e inglês
-- [ ] **Tema claro e escuro** — `next-themes` já está instalado, falta expor o selector
-- [ ] **Diálogos próprios** — substituir os `confirm()` nativos por `AlertDialog`
+- [x] **Tema claro e escuro** — via `next-themes`, com opção "Sistema"; o escuro
+      continua a ser o predefinido
+- [x] **Diálogos próprios** — os `confirm()` nativos deram lugar a `ConfirmarDialog`
 - [ ] **Colaboração em projectos** — convite por email, permissões e registo de actividade
 - [ ] **Leitura de facturas por fotografia** — extrair valor, data e fornecedor
 - [ ] **Assistente de IA de negócio** — para além da rotina, ajudar a estruturar a ideia

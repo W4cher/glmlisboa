@@ -3,6 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Aplica o tema antes da primeira pintura, para nao haver flash branco.
+         A chave "theme" e a que o next-themes usa. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme") || "dark";
+          if (t === "system") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.classList.add(t);
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
     <title>My Daily Compass — gestão do dia e do teu negócio</title>
     <meta name="description" content="Organiza a tua rotina, tarefas, cobranças, contas a pagar, stock e finanças dos teus negócios num só sítio.">
     <meta name="author" content="My Daily Compass" />

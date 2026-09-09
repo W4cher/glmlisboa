@@ -3,7 +3,65 @@
 @tailwind utilities;
 
 @layer base {
+  /* Tema claro — o predefinido para quem nunca escolheu. */
   :root {
+    --background: 30 20% 99%;
+    --foreground: 220 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+
+    /* Laranja da marca, escurecido para dar contraste sobre branco. */
+    --primary: 24 90% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 16% 96%;
+    --secondary-foreground: 220 25% 12%;
+
+    --muted: 220 16% 94%;
+    --muted-foreground: 220 9% 40%;
+
+    --accent: 220 16% 96%;
+    --accent-foreground: 220 25% 12%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 24 90% 40%;
+
+    --radius: 0.625rem;
+
+    --garcia-surface: 0 0% 100%;
+    --garcia-surface-hi: 220 24% 97%;
+    /* Fundo de botão neutro: tem de aguentar texto branco nos dois temas. */
+    --garcia-neutral: 220 9% 46%;
+    --garcia-gold: 38 92% 33%;
+    --garcia-green: 142 68% 31%;
+    --garcia-red: 0 74% 47%;
+    --garcia-blue: 217 85% 47%;
+    --garcia-purple: 271 65% 48%;
+    --garcia-pink: 330 72% 46%;
+    --garcia-indigo: 239 62% 54%;
+    --garcia-accent-dim: 21 90% 35%;
+    --garcia-accent-soft: 26 100% 95%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Tema escuro — a paleta original da app. */
+  .dark {
     --background: 220 20% 4%;
     --foreground: 220 20% 95%;
 
@@ -20,7 +78,7 @@
     --secondary-foreground: 220 20% 95%;
 
     --muted: 220 14% 16%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 220 9% 55%;
 
     --accent: 220 16% 12%;
     --accent-foreground: 220 20% 95%;
@@ -32,10 +90,9 @@
     --input: 220 14% 18%;
     --ring: 24 95% 53%;
 
-    --radius: 0.625rem;
-
     --garcia-surface: 220 18% 8%;
     --garcia-surface-hi: 220 16% 13%;
+    --garcia-neutral: 220 14% 20%;
     --garcia-gold: 45 97% 56%;
     --garcia-green: 142 71% 45%;
     --garcia-red: 0 84% 60%;
@@ -46,14 +103,14 @@
     --garcia-accent-dim: 21 90% 40%;
     --garcia-accent-soft: 18 95% 15%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 220 20% 95%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 16% 12%;
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 24 95% 53%;
   }
 }
 

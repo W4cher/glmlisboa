@@ -66,7 +66,7 @@ export default function NegocioForm({ onAdd, onCancel }: Props) {
 
       <div className="mt-3 flex gap-2">
         <GBtn onClick={submit} color="hsl(var(--primary))">Criar</GBtn>
-        <GBtn onClick={onCancel} color="hsl(var(--muted))">Cancelar</GBtn>
+        <GBtn onClick={onCancel} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
       </div>
     </GCard>
   );

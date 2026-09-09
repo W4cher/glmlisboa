@@ -4,6 +4,7 @@ import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
 import StockSection from "./StockSection";
+import ConfirmarDialog from "./ConfirmarDialog";
 import { Icon } from "@/lib/icons";
 import { BarChart3, TrendingUp, TrendingDown, Trash2, Plus } from "lucide-react";
 
@@ -25,6 +26,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
   const [tipo, setTipo] = useState<"venda" | "gasto">("venda");
   const [form, setForm] = useState({ descricao: "", valor: "", custo: "", qty: "1", cliente: "", data: today() });
   const [verTudoLog, setVerTudoLog] = useState(false);
+  const [negocioAApagar, setNegocioAApagar] = useState<string | null>(null);
 
   const n = negocios[sel] || { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] } as Negocio;
 
@@ -74,8 +76,10 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
     setShowAddNeg(false);
   };
 
-  const delNegocio = (id: string) => {
-    if (!confirm("Apagar este negócio? Os totais serão perdidos.")) return;
+  const confirmarApagarNegocio = () => {
+    const id = negocioAApagar;
+    if (!id) return;
+    setNegocioAApagar(null);
     setNegociosCfg(prev => prev.filter(n => n.id !== id));
     setNegocios(prev => {
       const copy = { ...prev };
@@ -184,7 +188,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
               <div className="font-bold text-[17px] inline-flex items-center gap-2">
                 <Icon name={selCfg.icon} size={18} /> {selCfg.nome}
               </div>
-              <button onClick={() => delNegocio(sel)}
+              <button onClick={() => setNegocioAApagar(sel)}
                 className="text-xs text-muted-foreground hover:text-destructive bg-transparent border border-border rounded-lg px-2.5 py-1 cursor-pointer transition-colors inline-flex items-center gap-1">
                 <Trash2 size={12} /> Apagar
               </button>
@@ -240,7 +244,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
                 </div>
                 <div className="mt-3 flex gap-2">
                   <GBtn onClick={registar} color={tipo === "venda" ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-red))"}>Guardar</GBtn>
-                  <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+                  <GBtn onClick={() => setShowForm(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
                 </div>
               </GCard>
             )}
@@ -328,6 +332,16 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
           </div>
         </>
       )}
+
+      <ConfirmarDialog
+        aberto={negocioAApagar !== null}
+        titulo={`Apagar "${negociosCfg.find(x => x.id === negocioAApagar)?.nome ?? "este negócio"}"?`}
+        descricao="A receita, os gastos, o stock e todo o histórico de vendas deste negócio são apagados. Não há forma de os recuperar."
+        textoConfirmar="Apagar negócio"
+        destrutivo
+        onConfirmar={confirmarApagarNegocio}
+        onCancelar={() => setNegocioAApagar(null)}
+      />
     </div>
   );
 }

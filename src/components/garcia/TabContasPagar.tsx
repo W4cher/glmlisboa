@@ -97,7 +97,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
           </div>
           <div className="mt-3 flex gap-2">
             <GBtn onClick={add} color="hsl(var(--primary))">Guardar</GBtn>
-            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--muted))">Cancelar</GBtn>
+            <GBtn onClick={() => setShowForm(false)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
           </div>
         </GCard>
       )}
@@ -122,7 +122,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
                 <div className="mt-2.5"><GInput label="Notas" value={editForm.notas || ""} onChange={v => setEditForm({ ...editForm, notas: v })} /></div>
                 <div className="mt-3 flex gap-2">
                   <GBtn onClick={saveEdit} color="hsl(var(--garcia-green))"><Check size={14} /> Guardar</GBtn>
-                  <GBtn onClick={() => { setEditId(null); setEditForm({}); }} color="hsl(var(--muted))"><X size={14} /> Cancelar</GBtn>
+                  <GBtn onClick={() => { setEditId(null); setEditForm({}); }} color="hsl(var(--garcia-neutral))"><X size={14} /> Cancelar</GBtn>
                 </div>
               </GCard>
             );
@@ -160,7 +160,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
                   <div className="flex-1"><GInput label={`Valor do pagamento (${simbolo})`} value={valorPagamento} onChange={setValorPagamento} type="number" placeholder={`Max: ${c.valor}`} /></div>
                   <div className="flex gap-2">
                     <GBtn onClick={() => registarPagamento(c)} color="hsl(var(--garcia-green))">Confirmar</GBtn>
-                    <GBtn onClick={() => setPagandoId(null)} color="hsl(var(--muted))">Cancelar</GBtn>
+                    <GBtn onClick={() => setPagandoId(null)} color="hsl(var(--garcia-neutral))">Cancelar</GBtn>
                   </div>
                 </div>
               )}

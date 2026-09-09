@@ -37,6 +37,7 @@ export default {
         garcia: {
           surface: "hsl(var(--garcia-surface))",
           "surface-hi": "hsl(var(--garcia-surface-hi))",
+          neutral: "hsl(var(--garcia-neutral))",
           gold: "hsl(var(--garcia-gold))",
           green: "hsl(var(--garcia-green))",
           red: "hsl(var(--garcia-red))",
