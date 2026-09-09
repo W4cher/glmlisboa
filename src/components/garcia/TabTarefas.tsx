@@ -1,18 +1,19 @@
 import { useState } from "react";
-import { Tarefa, uid, today, PRIORIDADES, CATEGORIAS_T } from "@/lib/garcia";
+import { Tarefa, Configuracoes, uid, today, PRIORIDADES, CATEGORIAS_T, catsOu } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, Empty } from "./SharedComponents";
 import { CheckSquare, Trash2, Check } from "lucide-react";
 
-interface Props { tarefas: Tarefa[]; setTarefas: (v: Tarefa[]) => void; }
+interface Props { tarefas: Tarefa[]; setTarefas: (v: Tarefa[]) => void; config?: Configuracoes; }
 
-export default function TabTarefas({ tarefas, setTarefas }: Props) {
-  const [form, setForm] = useState({ texto: "", prioridade: "Importante", categoria: "Outro", prazo: "" });
+export default function TabTarefas({ tarefas, setTarefas, config }: Props) {
+  const categorias = catsOu(config?.categoriasTarefas, CATEGORIAS_T);
+  const [form, setForm] = useState({ texto: "", prioridade: "Importante", categoria: "", prazo: "" });
   const [showForm, setShowForm] = useState(false);
 
   const add = () => {
     if (!form.texto.trim()) return;
     setTarefas([...tarefas, { id: uid(), ...form, feito: false, criada: today() }]);
-    setForm({ texto: "", prioridade: "Importante", categoria: "Outro", prazo: "" });
+    setForm({ texto: "", prioridade: "Importante", categoria: "", prazo: "" });
     setShowForm(false);
   };
   const toggle = (id: string) => setTarefas(tarefas.map(t => t.id === id ? { ...t, feito: !t.feito } : t));
@@ -37,7 +38,7 @@ export default function TabTarefas({ tarefas, setTarefas }: Props) {
           <GInput label="O que tens para fazer?" value={form.texto} onChange={v => setForm({ ...form, texto: v })} placeholder="Ex: Ligar ao cliente X..." />
           <div className="grid grid-cols-3 gap-3 mt-2.5">
             <GSelect label="Prioridade" value={form.prioridade} onChange={v => setForm({ ...form, prioridade: v })} options={PRIORIDADES} />
-            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={CATEGORIAS_T} />
+            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={categorias} />
             <GInput label="Prazo" value={form.prazo} onChange={v => setForm({ ...form, prazo: v })} type="date" />
           </div>
           <div className="mt-3 flex gap-2">

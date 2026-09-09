@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Financas, uid, today, fmt, fmtMasked, CATS_ENTRADA, CATS_SAIDA } from "@/lib/garcia";
+import { Financas, Configuracoes, uid, today, fmt, fmtMasked, CATS_ENTRADA, CATS_SAIDA, catsOu } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { Wallet, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
-interface Props { finanas: Financas; setFinanas: (v: Financas) => void; ocultarValores?: boolean; }
+interface Props { finanas: Financas; setFinanas: (v: Financas) => void; ocultarValores?: boolean; config?: Configuracoes; }
 
-export default function TabFinancas({ finanas, setFinanas, ocultarValores = false }: Props) {
+export default function TabFinancas({ finanas, setFinanas, ocultarValores = false, config }: Props) {
+  const catsEntrada = catsOu(config?.categoriasEntrada, CATS_ENTRADA);
+  const catsSaida = catsOu(config?.categoriasSaida, CATS_SAIDA);
   const [tipo, setTipo] = useState<"entrada" | "saida">("entrada");
   const [form, setForm] = useState({ descricao: "", valor: "", categoria: "", data: today() });
   const [showForm, setShowForm] = useState(false);
@@ -56,9 +58,9 @@ export default function TabFinancas({ finanas, setFinanas, ocultarValores = fals
       {showForm && (
         <GCard className="mb-4">
           <div className="grid grid-cols-2 gap-3">
-            <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: Salário Bosch" />
+            <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: Venda do dia, salário, renda recebida" />
             <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" />
-            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={tipo === "entrada" ? CATS_ENTRADA : CATS_SAIDA} />
+            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={tipo === "entrada" ? catsEntrada : catsSaida} />
             <GInput label="Data" value={form.data} onChange={v => setForm({ ...form, data: v })} type="date" />
           </div>
           <div className="mt-3 flex gap-2">

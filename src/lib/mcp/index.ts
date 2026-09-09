@@ -10,10 +10,10 @@ const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unse
 
 export default defineMcp({
   name: "sistema-garcia-mcp",
-  title: "Sistema Garcia MCP",
+  title: "My Daily Compass MCP",
   version: "0.1.0",
   instructions:
-    "Ferramentas para o Sistema Garcia: tarefas, cobranças, negócios (stock e receita) e finanças pessoais. Todas as ferramentas actuam apenas sobre os dados do utilizador autenticado.",
+    "Ferramentas para o My Daily Compass: tarefas, cobranças, negócios (stock e receita) e finanças pessoais. Todas as ferramentas actuam apenas sobre os dados do utilizador autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

@@ -1,7 +1,11 @@
-import { Configuracoes } from "@/lib/garcia";
+import {
+  Configuracoes, catsOu,
+  CATEGORIAS_T, CATS_ENTRADA, CATS_SAIDA, CATS_CONTAS_PAGAR,
+} from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GBtn } from "./SharedComponents";
+import ListaCategorias from "./ListaCategorias";
 import { ensureNotifPermission, notify } from "@/lib/notifications";
-import { Settings, Bell, Eye, User, BellRing } from "lucide-react";
+import { Settings, Bell, Eye, User, BellRing, Tags } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,7 +37,7 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
 
       <GCard className="mb-4">
         <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><User size={16} /> Identidade</div>
-        <GInput label="O teu nome (aparece na app)" value={config.nome} onChange={v => setConfig({ ...config, nome: v })} placeholder="Ex: Garcia" />
+        <GInput label="O teu nome (aparece na app)" value={config.nome} onChange={v => setConfig({ ...config, nome: v })} placeholder="O teu primeiro nome" />
       </GCard>
 
       <GCard className="mb-4">
@@ -51,6 +55,38 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
         ) : (
           <GBtn onClick={ativarNotifs} color="hsl(var(--primary))"><Bell size={14} /> Ativar notificações</GBtn>
         )}
+      </GCard>
+
+      <GCard className="mb-4">
+        <div className="font-semibold text-sm mb-3 inline-flex items-center gap-2"><Tags size={16} /> Categorias</div>
+        <div className="text-xs text-muted-foreground mb-4">
+          Adapta as categorias ao teu negócio. Elas aparecem nas listas de escolha ao registar
+          tarefas, entradas, saídas e contas a pagar.
+        </div>
+        <ListaCategorias
+          label="Tarefas"
+          valores={catsOu(config.categoriasTarefas, CATEGORIAS_T)}
+          padrao={CATEGORIAS_T}
+          onChange={v => setConfig({ ...config, categoriasTarefas: v })}
+        />
+        <ListaCategorias
+          label="Entradas de dinheiro"
+          valores={catsOu(config.categoriasEntrada, CATS_ENTRADA)}
+          padrao={CATS_ENTRADA}
+          onChange={v => setConfig({ ...config, categoriasEntrada: v })}
+        />
+        <ListaCategorias
+          label="Saídas de dinheiro"
+          valores={catsOu(config.categoriasSaida, CATS_SAIDA)}
+          padrao={CATS_SAIDA}
+          onChange={v => setConfig({ ...config, categoriasSaida: v })}
+        />
+        <ListaCategorias
+          label="Contas a pagar"
+          valores={catsOu(config.categoriasContas, CATS_CONTAS_PAGAR)}
+          padrao={CATS_CONTAS_PAGAR}
+          onChange={v => setConfig({ ...config, categoriasContas: v })}
+        />
       </GCard>
 
       <GCard className="mb-4">

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { BlocoRotina, DEFAULT_BLOCOS_ROTINA, BLOCO_COLORS, today, uid } from "@/lib/garcia";
+import { BlocoRotina, MODELOS_ROTINA, BLOCO_COLORS, blocosDoModelo, today, uid } from "@/lib/garcia";
 import { SectionHeader, GCard, GBtn, GInput } from "./SharedComponents";
+import { Icon } from "@/lib/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Clock, Sparkles, Trash2, Plus, Check, RotateCcw } from "lucide-react";
+import { Clock, Sparkles, Trash2, Plus, Check, LayoutTemplate } from "lucide-react";
 
 interface Props {
   rotinaDia: Record<string, Record<string, boolean>>;
@@ -16,6 +17,7 @@ interface Props {
 export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, nome }: Props) {
   const [showAI, setShowAI] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showModelos, setShowModelos] = useState(false);
   const [rotinaAtual, setRotinaAtual] = useState("");
   const [objetivos, setObjetivos] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,11 +83,14 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
 
   const delBloco = (id: string) => setBlocos(blocos.filter(b => b.id !== id));
 
-  const reset = () => {
-    if (!confirm("Restaurar rotina padrão? A rotina actual será perdida.")) return;
-    setBlocos(DEFAULT_BLOCOS_ROTINA);
+  const aplicarModelo = (modeloId: string) => {
+    const modelo = MODELOS_ROTINA.find(m => m.id === modeloId);
+    if (!modelo) return;
+    setBlocos(blocosDoModelo(modelo));
     setRotinaDia({ ...rotinaDia, [key]: {} });
     setResumoIA("");
+    setShowModelos(false);
+    toast.success(`Modelo "${modelo.nome}" aplicado`);
   };
 
   return (
@@ -112,18 +117,44 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
       <div className="flex gap-2 mb-4 flex-wrap">
         <GBtn onClick={() => setShowAI(!showAI)} color="hsl(var(--garcia-purple))"><Sparkles size={14} /> Gerar com IA</GBtn>
         <GBtn onClick={() => setShowAdd(!showAdd)} color="hsl(var(--primary))"><Plus size={14} /> Bloco</GBtn>
-        <GBtn onClick={reset} color="hsl(var(--muted))"><RotateCcw size={14} /> Padrão</GBtn>
+        <GBtn onClick={() => setShowModelos(!showModelos)} color="hsl(var(--muted))"><LayoutTemplate size={14} /> Modelos</GBtn>
       </div>
+
+      {showModelos && (
+        <GCard className="mb-4">
+          <div className="font-semibold text-sm mb-1 inline-flex items-center gap-2">
+            <LayoutTemplate size={16} /> Escolher um modelo
+          </div>
+          <div className="text-xs text-muted-foreground mb-3">
+            Substitui os blocos actuais por um ponto de partida. Depois ajustas as horas.
+          </div>
+          <div className="flex flex-col gap-2">
+            {MODELOS_ROTINA.map(m => (
+              <button key={m.id} onClick={() => aplicarModelo(m.id)}
+                className="text-left rounded-lg px-3 py-2.5 flex items-center gap-3 cursor-pointer border border-border bg-garcia-surface-hi hover:border-primary transition-colors">
+                <span className="text-muted-foreground shrink-0"><Icon name={m.icon} size={17} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-[13px]">{m.nome}</span>
+                  <span className="block text-[11px] text-muted-foreground truncate">{m.desc} · {m.blocos.length} blocos</span>
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3">
+            <GBtn onClick={() => setShowModelos(false)} color="hsl(var(--muted))" small>Cancelar</GBtn>
+          </div>
+        </GCard>
+      )}
 
       {showAI && (
         <GCard className="mb-4">
           <div className="font-semibold text-sm mb-2 inline-flex items-center gap-2"><Sparkles size={16} /> Conta-me a tua rotina</div>
           <div className="text-xs text-muted-foreground mb-3">Descreve a tua rotina actual, o que sentes que está mal, e os teus objectivos. A IA vai propor uma rotina ideal.</div>
           <textarea value={rotinaAtual} onChange={e => setRotinaAtual(e.target.value)}
-            placeholder="Ex: Acordo às 7h, levo os filhos à escola, trabalho na Bosch das 8h30 às 17h, depois fico cansado e não consigo estudar para a tese..."
+            placeholder="Ex: Abro a loja às 8h, fico sozinho até à tarde, não tenho tempo para tratar das cobranças nem para a família..."
             className="w-full bg-garcia-surface-hi border border-border rounded-lg text-foreground px-3 py-2.5 text-[13px] min-h-[110px] resize-y mb-2" />
           <textarea value={objetivos} onChange={e => setObjetivos(e.target.value)}
-            placeholder="Objectivos: ter mais tempo para a tese, fazer ginásio, equilibrar família e negócios..."
+            placeholder="Objectivos: vender mais, ter tempo para a família, organizar as contas do negócio..."
             className="w-full bg-garcia-surface-hi border border-border rounded-lg text-foreground px-3 py-2.5 text-[13px] min-h-[70px] resize-y" />
           <div className="mt-3 flex gap-2">
             <GBtn onClick={gerarComIA} color="hsl(var(--garcia-purple))">{loading ? "A pensar..." : "Gerar rotina"}</GBtn>
@@ -191,7 +222,7 @@ export default function TabRotina({ rotinaDia, setRotinaDia, blocos, setBlocos, 
           );
         })}
         {sortedBlocos.length === 0 && (
-          <div className="text-center text-muted-foreground py-8 text-sm">Sem blocos. Gera uma rotina com IA ou adiciona manualmente.</div>
+          <div className="text-center text-muted-foreground py-8 text-sm">Sem blocos. Escolhe um modelo, gera uma rotina com IA ou adiciona à mão.</div>
         )}
       </div>
     </div>

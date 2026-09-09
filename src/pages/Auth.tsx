@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { APP_NAME } from "@/lib/garcia";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -50,9 +51,9 @@ export default function AuthPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-primary-foreground"
-            style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--garcia-gold)))" }}>G</div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Sistema Garcia</h1>
-          <p className="text-muted-foreground text-sm mt-1">O teu sistema de produtividade pessoal</p>
+            style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--garcia-gold)))" }}>M</div>
+          <h1 className="text-2xl font-extrabold tracking-tight">{APP_NAME}</h1>
+          <p className="text-muted-foreground text-sm mt-1">Organiza o teu dia e os teus negócios num só sítio</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-6">

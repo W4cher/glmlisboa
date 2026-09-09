@@ -22,17 +22,16 @@ export interface StockItem {
 export interface Negocio {
   receita: number; gastos: number; meta: number; notas: string; proxima?: string; log: LogEntry[]; stock: StockItem[];
 }
+/**
+ * Tipo de negócio. Define que campos fazem sentido mostrar:
+ *  - produtos   → loja, revenda: stock, meta de receita
+ *  - servicos   → oficina, escritório, salão: sem stock, meta de receita
+ *  - recorrente → rendas, mensalidades: próximo recebimento em vez de meta
+ */
+export type TipoNegocio = "produtos" | "servicos" | "recorrente";
+
 export interface NegocioCfg {
-  id: string; icon: string; nome: string; desc: string;
-}
-export interface Capitulo {
-  id: string; nome: string; progresso: number;
-}
-export interface TeseTarefa {
-  id: string; texto: string; feito: boolean;
-}
-export interface Tese {
-  titulo: string; capitulos: Capitulo[]; tarefas: TeseTarefa[];
+  id: string; icon: string; nome: string; desc: string; tipo?: TipoNegocio;
 }
 export interface AprendizadoTopico {
   id: string; texto: string; feito: boolean;
@@ -58,6 +57,13 @@ export interface Configuracoes {
   nome: string;
   notificacoesAtivas: boolean;
   ocultarValores: boolean;
+  /** Falso/ausente enquanto o utilizador não passar pelo assistente inicial. */
+  onboardingCompleto?: boolean;
+  /** Categorias editáveis pelo utilizador. Ausentes = usa os defaults genéricos. */
+  categoriasTarefas?: string[];
+  categoriasEntrada?: string[];
+  categoriasSaida?: string[];
+  categoriasContas?: string[];
 }
 export interface ContaPagar {
   id: string;
@@ -125,29 +131,105 @@ export const save = async <T>(key: string, val: T) => {
 };
 
 // ── Constants ──
+export const APP_NAME = "My Daily Compass";
+
 export const PRIORIDADES = ["Urgente", "Importante", "Normal"];
-export const CATEGORIAS_T = ["Bosch", "Aprendizado", "Smart X Phone", "Sobrilho", "Finanças", "Família", "TikTok", "Outro"];
-export const CATS_ENTRADA = ["Bosch/Salário", "Smart X Phone", "Sobrilho", "Roupas", "Rendas", "TikTok", "Outro"];
-export const CATS_SAIDA = ["Casa", "Alimentação", "Escola filhos", "Ginásio", "Negócios", "Transporte", "Pessoal", "Outro"];
+
+// Categorias por defeito — genéricas de propósito. O utilizador edita-as em
+// Configurações; ver `Configuracoes.categorias*` e `catsOu()`.
+export const CATEGORIAS_T = ["Negócio", "Clientes", "Finanças", "Pessoal", "Família", "Estudo", "Outro"];
+export const CATS_ENTRADA = ["Vendas", "Serviços", "Salário", "Rendas", "Empréstimo", "Outro"];
+export const CATS_SAIDA = ["Fornecedores", "Casa", "Alimentação", "Transporte", "Salários", "Impostos", "Pessoal", "Outro"];
 export const CATS_CONTAS_PAGAR = ["Fornecedor", "Empréstimo", "Renda", "Água/Luz", "Impostos", "Serviços", "Cartão", "Outro"];
 
+/** Devolve a lista do utilizador se existir e não estiver vazia, senão o default. */
+export const catsOu = (doUtilizador: string[] | undefined, padrao: string[]) =>
+  doUtilizador && doUtilizador.length > 0 ? doUtilizador : padrao;
 
-export const DEFAULT_BLOCOS_ROTINA: BlocoRotina[] = [
-  { id: "b1", hora: "07:00", label: "Acordar + café + plano do dia", bloco: "Manhã" },
-  { id: "b2", hora: "07:30", label: "Preparar filhos → escola às 8:20", bloco: "Manhã" },
-  { id: "b3", hora: "08:30", label: "Bosch API — trabalho principal", bloco: "Trabalho" },
-  { id: "b4", hora: "12:30", label: "Bloco negócios rápido (30min)", bloco: "Trabalho" },
-  { id: "b5", hora: "13:00", label: "Almoço + descanso", bloco: "Pausa" },
-  { id: "b6", hora: "14:00", label: "Aprendizado — foco total", bloco: "Estudo" },
-  { id: "b7", hora: "17:00", label: "Ginásio", bloco: "Pessoal" },
-  { id: "b8", hora: "18:00", label: "Buscar filhos + família", bloco: "Família" },
-  { id: "b9", hora: "21:45", label: "Finanças + cobranças", bloco: "Noite" },
-  { id: "b10", hora: "22:15", label: "Marketing criativo", bloco: "Noite" },
-  { id: "b11", hora: "23:00", label: "Revisão do dia + plano amanhã", bloco: "Noite" },
-  { id: "b12", hora: "23:30", label: "Desligar — sem stress", bloco: "Noite" },
+// ── Modelos de rotina (usados no onboarding e no botão "Modelos") ──
+
+export interface ModeloRotina {
+  id: string;
+  nome: string;
+  desc: string;
+  icon: string;
+  blocos: Omit<BlocoRotina, "id">[];
+}
+
+export const MODELOS_ROTINA: ModeloRotina[] = [
+  {
+    id: "comerciante",
+    nome: "Comércio / Loja",
+    desc: "Para quem abre uma loja ou vende durante o dia",
+    icon: "store",
+    blocos: [
+      { hora: "06:30", label: "Acordar e preparar o dia", bloco: "Manhã" },
+      { hora: "07:30", label: "Conferir stock e caixa", bloco: "Manhã" },
+      { hora: "08:00", label: "Abrir — atendimento", bloco: "Trabalho" },
+      { hora: "12:30", label: "Almoço e descanso", bloco: "Pausa" },
+      { hora: "13:30", label: "Atendimento e reposição", bloco: "Trabalho" },
+      { hora: "17:00", label: "Fecho de caixa do dia", bloco: "Trabalho" },
+      { hora: "18:00", label: "Registar vendas na app", bloco: "Noite" },
+      { hora: "19:00", label: "Família", bloco: "Família" },
+      { hora: "21:00", label: "Cobranças e contas a pagar", bloco: "Noite" },
+      { hora: "22:30", label: "Plano de amanhã e descansar", bloco: "Noite" },
+    ],
+  },
+  {
+    id: "servicos",
+    nome: "Serviços / Escritório",
+    desc: "Consultoria, jurídico, contabilidade, agência",
+    icon: "briefcase",
+    blocos: [
+      { hora: "07:00", label: "Acordar e plano do dia", bloco: "Manhã" },
+      { hora: "08:30", label: "Processos e prazos urgentes", bloco: "Trabalho" },
+      { hora: "11:00", label: "Reuniões e clientes", bloco: "Trabalho" },
+      { hora: "13:00", label: "Almoço", bloco: "Pausa" },
+      { hora: "14:00", label: "Trabalho de fundo — foco", bloco: "Trabalho" },
+      { hora: "16:30", label: "Responder a clientes", bloco: "Trabalho" },
+      { hora: "18:00", label: "Facturação e cobranças", bloco: "Trabalho" },
+      { hora: "19:00", label: "Pessoal e família", bloco: "Família" },
+      { hora: "22:00", label: "Revisão do dia", bloco: "Noite" },
+    ],
+  },
+  {
+    id: "paralelo",
+    nome: "Emprego + negócio",
+    desc: "Tens um emprego e um negócio ao lado",
+    icon: "laptop",
+    blocos: [
+      { hora: "06:30", label: "Acordar e preparar o dia", bloco: "Manhã" },
+      { hora: "08:00", label: "Emprego", bloco: "Trabalho" },
+      { hora: "12:30", label: "Almoço — tratar do negócio (30 min)", bloco: "Pausa" },
+      { hora: "13:30", label: "Emprego", bloco: "Trabalho" },
+      { hora: "17:30", label: "Negócio — vendas e clientes", bloco: "Trabalho" },
+      { hora: "19:00", label: "Família", bloco: "Família" },
+      { hora: "21:00", label: "Registar o dia e cobranças", bloco: "Noite" },
+      { hora: "21:45", label: "Aprender algo novo", bloco: "Estudo" },
+      { hora: "23:00", label: "Desligar", bloco: "Noite" },
+    ],
+  },
+  {
+    id: "equilibrio",
+    nome: "Dia equilibrado",
+    desc: "Base simples com trabalho, estudo, família e descanso",
+    icon: "leaf",
+    blocos: [
+      { hora: "07:00", label: "Acordar e plano do dia", bloco: "Manhã" },
+      { hora: "09:00", label: "Trabalho — bloco principal", bloco: "Trabalho" },
+      { hora: "13:00", label: "Almoço e pausa", bloco: "Pausa" },
+      { hora: "14:00", label: "Trabalho — segundo bloco", bloco: "Trabalho" },
+      { hora: "17:00", label: "Exercício", bloco: "Pessoal" },
+      { hora: "18:30", label: "Família", bloco: "Família" },
+      { hora: "20:30", label: "Estudo", bloco: "Estudo" },
+      { hora: "22:30", label: "Revisão do dia", bloco: "Noite" },
+    ],
+  },
 ];
 
-export const BLOCOS_ROTINA = DEFAULT_BLOCOS_ROTINA;
+/** Instancia um modelo, atribuindo ids novos aos blocos. */
+export const blocosDoModelo = (modelo: ModeloRotina): BlocoRotina[] =>
+  modelo.blocos.map(b => ({ ...b, id: uid() }));
 
 export const BLOCO_COLORS: Record<string, string> = {
   "Manhã": "hsl(var(--garcia-gold))",
@@ -160,34 +242,16 @@ export const BLOCO_COLORS: Record<string, string> = {
   "Noite": "hsl(var(--garcia-indigo))",
 };
 
-export const DEFAULT_NEGOCIOS_CFG: NegocioCfg[] = [
-  { id: "smartphone", icon: "smartphone", nome: "Smart X Phone", desc: "Vendas de telemóveis" },
-  { id: "sobrilho", icon: "car", nome: "Sobrilho", desc: "Pintura automóvel" },
-  { id: "roupas", icon: "shirt", nome: "Roupas (esposa)", desc: "Vendas de roupa" },
-  { id: "rendas", icon: "home", nome: "Rendas", desc: "Propriedades arrendadas" },
-];
+// Um utilizador novo começa sem nada: os negócios são criados por ele no
+// assistente inicial (ver components/garcia/Onboarding.tsx).
+export const DEFAULT_NEGOCIOS_CFG: NegocioCfg[] = [];
 
-export const NEGOCIOS_CFG = DEFAULT_NEGOCIOS_CFG;
+export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {};
 
-export const DEFAULT_NEGOCIOS: Record<string, Negocio> = {
-  smartphone: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
-  sobrilho: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
-  roupas: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] },
-  rendas: { receita: 0, gastos: 0, meta: 0, notas: "", proxima: "", log: [], stock: [] },
-};
-
-export const DEFAULT_TESE: Tese = {
-  titulo: "Blockchain-Secured FL for Trustworthy Edge Intelligence",
-  capitulos: [
-    { id: "c1", nome: "Introdução", progresso: 80 },
-    { id: "c2", nome: "Estado da Arte", progresso: 60 },
-    { id: "c3", nome: "Arquitetura Proposta", progresso: 40 },
-    { id: "c4", nome: "Implementação", progresso: 20 },
-    { id: "c5", nome: "Avaliação & Resultados", progresso: 0 },
-    { id: "c6", nome: "Conclusão", progresso: 0 },
-  ],
-  tarefas: [],
-};
+/** Um negócio novo, vazio. */
+export const negocioVazio = (): Negocio => ({
+  receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [],
+});
 
 export const DEFAULT_APRENDIZADO: AprendizadoArea[] = [];
 
@@ -195,7 +259,20 @@ export const DEFAULT_CONFIG: Configuracoes = {
   nome: "",
   notificacoesAtivas: false,
   ocultarValores: false,
+  onboardingCompleto: false,
 };
+
+/** Sugestões de negócio mostradas no assistente inicial. */
+export const SUGESTOES_NEGOCIO: { nome: string; desc: string; icon: string; tipo: TipoNegocio }[] = [
+  { nome: "Loja / Revenda", desc: "Compra e venda de produtos", icon: "store", tipo: "produtos" },
+  { nome: "Telemóveis e electrónica", desc: "Venda e reparação", icon: "smartphone", tipo: "produtos" },
+  { nome: "Roupa e calçado", desc: "Venda de vestuário", icon: "shirt", tipo: "produtos" },
+  { nome: "Restauração", desc: "Comida e bebidas", icon: "utensils", tipo: "produtos" },
+  { nome: "Salão / Barbearia", desc: "Serviços de beleza", icon: "scissors", tipo: "servicos" },
+  { nome: "Oficina", desc: "Reparação e manutenção", icon: "wrench", tipo: "servicos" },
+  { nome: "Serviços profissionais", desc: "Consultoria, jurídico, contabilidade", icon: "briefcase", tipo: "servicos" },
+  { nome: "Rendas", desc: "Propriedades arrendadas", icon: "home", tipo: "recorrente" },
+];
 
 export const NEGOCIO_ICONS = [
   "smartphone", "car", "shirt", "home", "laptop", "palette", "utensils",

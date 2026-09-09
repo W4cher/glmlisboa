@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, fmt, fmtMasked, uid, today } from "@/lib/garcia";
+import { Negocio, NegocioCfg, LogEntry, StockItem, enforceLogLimits, fmt, fmtMasked, negocioVazio, uid, today } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
 import StockSection from "./StockSection";
@@ -64,7 +64,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
   const addNegocio = (cfg: NegocioCfg) => {
     setNegociosCfg(prev => [...prev, cfg]);
-    setNegocios(prev => ({ ...prev, [cfg.id]: { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] } }));
+    setNegocios(prev => ({ ...prev, [cfg.id]: negocioVazio() }));
     setSel(cfg.id);
     setShowAddNeg(false);
   };
@@ -130,6 +130,9 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
   const stockLucroEstimado = stockVendaEstimada - stockCustoTotal;
 
   const selCfg = negociosCfg.find(x => x.id === sel);
+  // Negócios recorrentes (rendas, mensalidades) mostram o próximo recebimento
+  // em vez de uma meta de receita.
+  const recorrente = selCfg?.tipo === "recorrente";
 
   return (
     <div>
@@ -154,6 +157,20 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
 
       {showAddNeg && <NegocioForm onAdd={addNegocio} onCancel={() => setShowAddNeg(false)} />}
 
+      {negociosCfg.length === 0 && !showAddNeg && (
+        <GCard>
+          <div className="text-center py-6">
+            <div className="font-semibold text-sm mb-1">Ainda não tens negócios</div>
+            <div className="text-xs text-muted-foreground mb-4">
+              Cria o primeiro para começares a registar vendas, gastos e stock.
+            </div>
+            <GBtn onClick={() => setShowAddNeg(true)} color="hsl(var(--primary))">
+              <Plus size={14} /> Criar negócio
+            </GBtn>
+          </div>
+        </GCard>
+      )}
+
       {selCfg && (
         <>
           <GCard className="mb-4">
@@ -173,9 +190,9 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
               <StatCard label="Margem" value={`${margem}%`} color={margem >= 30 ? "hsl(var(--garcia-green))" : "hsl(var(--garcia-gold))"} small />
             </div>
 
-            {sel !== "rendas" && (
+            {!recorrente && (
               <div className="mb-4">
-                <NumInput label="Meta do mês (AOA)" value={n.meta || 0} onChange={v => upd("meta", v)} />
+                <NumInput label="Meta do mês" value={n.meta || 0} onChange={v => upd("meta", v)} />
                 {(n.meta || 0) > 0 && (
                   <div className="mt-2">
                     <div className="flex justify-between mb-1.5 text-[13px]">
@@ -190,7 +207,7 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
               </div>
             )}
 
-            {sel === "rendas" && (
+            {recorrente && (
               <div className="mb-4">
                 <GInput label="Próximo recebimento" value={n.proxima || ""} onChange={v => upd("proxima", v)} type="date" />
               </div>

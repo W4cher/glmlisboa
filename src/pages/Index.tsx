@@ -4,8 +4,9 @@ import {
   load, save, Devedor, Negocio, NegocioCfg, Tarefa, Financas, AprendizadoArea,
   BlocoRotina, Configuracoes, ContaPagar,
   DEFAULT_NEGOCIOS, DEFAULT_NEGOCIOS_CFG, DEFAULT_APRENDIZADO, DEFAULT_CONFIG,
-  diasAtras,
+  APP_NAME, diasAtras,
 } from "@/lib/garcia";
+import Onboarding, { DadosOnboarding } from "@/components/garcia/Onboarding";
 import TabRotina from "@/components/garcia/TabRotina";
 import TabTarefas from "@/components/garcia/TabTarefas";
 import TabDevedores from "@/components/garcia/TabDevedores";
@@ -49,6 +50,7 @@ export default function Index() {
   const [finanas, setFinanas] = useState<Financas>({ entradas: [], saidas: [] });
   const [config, setConfig] = useState<Configuracoes>(DEFAULT_CONFIG);
   const [valoresVisiveis, setValoresVisiveis] = useState(true);
+  const [precisaOnboarding, setPrecisaOnboarding] = useState(false);
 
   const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const debouncedSave = useCallback((key: string, val: any) => {
@@ -92,6 +94,16 @@ export default function Index() {
         setConfig(cfg);
         setValoresVisiveis(!cfg.ocultarValores);
       }
+
+      // Só mostra o assistente inicial a quem ainda não o fez E não tem dados
+      // nenhuns — assim as contas que já existiam antes do onboarding entram
+      // directamente na app, sem perder nada.
+      const temDados = !!(
+        nc?.length || bl?.length || tk?.length || d?.length || cp?.length ||
+        (n && Object.keys(n).length) || cfg?.nome
+      );
+      setPrecisaOnboarding(!cfg?.onboardingCompleto && !temDados);
+
       setLoaded(true);
     })();
   }, [user]);
@@ -136,9 +148,19 @@ export default function Index() {
     }
   }, [loaded, config.notificacoesAtivas, tarefas, devedores]);
 
+  const concluirOnboarding = (dados: DadosOnboarding) => {
+    setNegociosCfg(dados.negociosCfg);
+    setNegocios(dados.negocios);
+    setBlocos(dados.blocos);
+    setConfig(prev => ({ ...prev, nome: dados.nome, onboardingCompleto: true }));
+    setPrecisaOnboarding(false);
+    setTab(dados.negociosCfg.length > 0 ? "negocios" : "rotina");
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setLoaded(false);
+    setPrecisaOnboarding(false);
     setDevedores([]);
     setContasPagar([]);
     setNegocios(DEFAULT_NEGOCIOS);
@@ -165,15 +187,17 @@ export default function Index() {
     </div>
   );
 
+  if (precisaOnboarding) return <Onboarding onConcluir={concluirOnboarding} />;
+
   const ocultar = !valoresVisiveis;
-  const nomeApp = config.nome || "Sistema Garcia";
+  const nomeApp = config.nome || APP_NAME;
 
   return (
     <div className="bg-background min-h-screen font-sans text-foreground">
       <div className="bg-card border-b border-border px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold text-primary-foreground shrink-0"
           style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--garcia-gold)))" }}>
-          {(config.nome || "G").charAt(0).toUpperCase()}
+          {(config.nome || APP_NAME).charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-bold text-sm sm:text-base tracking-tight truncate">{nomeApp}</div>
@@ -212,12 +236,12 @@ export default function Index() {
 
       <div className="max-w-[900px] mx-auto p-3 sm:p-5">
         {tab === "rotina" && <TabRotina rotinaDia={rotinaDia} setRotinaDia={setRotinaDia} blocos={blocos} setBlocos={setBlocos} nome={config.nome} />}
-        {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} />}
+        {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} config={config} />}
         {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} ocultarValores={ocultar} />}
-        {tab === "contaspagar" && <TabContasPagar contas={contasPagar} setContas={setContasPagar} ocultarValores={ocultar} />}
+        {tab === "contaspagar" && <TabContasPagar contas={contasPagar} setContas={setContasPagar} ocultarValores={ocultar} config={config} />}
         {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} setNegociosCfg={setNegociosCfg} ocultarValores={ocultar} />}
         {tab === "aprendizado" && <TabAprendizado areas={aprendizado} setAreas={setAprendizado} />}
-        {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} ocultarValores={ocultar} />}
+        {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} ocultarValores={ocultar} config={config} />}
         {tab === "config" && <TabConfig config={config} setConfig={setConfig} onLogout={handleLogout} />}
       </div>
     </div>

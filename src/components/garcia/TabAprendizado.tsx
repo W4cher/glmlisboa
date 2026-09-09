@@ -70,7 +70,7 @@ export default function TabAprendizado({ areas, setAreas }: Props) {
             ))}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <GInput label="Nome*" value={novoNome} onChange={setNovoNome} placeholder="Ex: Inglês, React, Tese FL..." />
+            <GInput label="Nome*" value={novoNome} onChange={setNovoNome} placeholder="Ex: Inglês, Contabilidade, Marketing..." />
             <GInput label="Objetivo" value={novoObjetivo} onChange={setNovoObjetivo} placeholder="Ex: Ler papers em inglês" />
           </div>
           <div className="mt-3 flex gap-2">

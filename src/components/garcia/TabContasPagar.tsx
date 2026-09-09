@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ContaPagar, CATS_CONTAS_PAGAR, uid, today, fmtMasked, diasAtras } from "@/lib/garcia";
+import { ContaPagar, Configuracoes, CATS_CONTAS_PAGAR, uid, today, fmtMasked, diasAtras, catsOu } from "@/lib/garcia";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { CreditCard, Trash2, Pencil, Check, X, AlertTriangle, Receipt } from "lucide-react";
 
@@ -7,10 +7,12 @@ interface Props {
   contas: ContaPagar[];
   setContas: (v: ContaPagar[] | ((prev: ContaPagar[]) => ContaPagar[])) => void;
   ocultarValores?: boolean;
+  config?: Configuracoes;
 }
 
-export default function TabContasPagar({ contas, setContas, ocultarValores = false }: Props) {
-  const [form, setForm] = useState({ descricao: "", credor: "", valor: "", categoria: CATS_CONTAS_PAGAR[0], prazo: today(), notas: "" });
+export default function TabContasPagar({ contas, setContas, ocultarValores = false, config }: Props) {
+  const categorias = catsOu(config?.categoriasContas, CATS_CONTAS_PAGAR);
+  const [form, setForm] = useState({ descricao: "", credor: "", valor: "", categoria: categorias[0], prazo: today(), notas: "" });
   const [showForm, setShowForm] = useState(false);
   const [pagandoId, setPagandoId] = useState<string | null>(null);
   const [valorPagamento, setValorPagamento] = useState("");
@@ -25,7 +27,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
       categoria: form.categoria, prazo: form.prazo, notas: form.notas,
       pago: false, pagamentos: [], criada: today(),
     }]);
-    setForm({ descricao: "", credor: "", valor: "", categoria: CATS_CONTAS_PAGAR[0], prazo: today(), notas: "" });
+    setForm({ descricao: "", credor: "", valor: "", categoria: categorias[0], prazo: today(), notas: "" });
     setShowForm(false);
   };
 
@@ -84,7 +86,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
             <GInput label="Descrição*" value={form.descricao} onChange={v => setForm({ ...form, descricao: v })} placeholder="Ex: Fornecedor peças" />
             <GInput label="Credor" value={form.credor} onChange={v => setForm({ ...form, credor: v })} placeholder="A quem devo" />
             <GInput label="Valor (AOA)*" value={form.valor} onChange={v => setForm({ ...form, valor: v })} type="number" placeholder="0" />
-            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={CATS_CONTAS_PAGAR} />
+            <GSelect label="Categoria" value={form.categoria} onChange={v => setForm({ ...form, categoria: v })} options={categorias} />
             <GInput label="Prazo" value={form.prazo} onChange={v => setForm({ ...form, prazo: v })} type="date" />
           </div>
           <div className="mt-2.5">
@@ -111,7 +113,7 @@ export default function TabContasPagar({ contas, setContas, ocultarValores = fal
                   <GInput label="Descrição" value={editForm.descricao || ""} onChange={v => setEditForm({ ...editForm, descricao: v })} />
                   <GInput label="Credor" value={editForm.credor || ""} onChange={v => setEditForm({ ...editForm, credor: v })} />
                   <GInput label="Valor" value={String(editForm.valor ?? "")} onChange={v => setEditForm({ ...editForm, valor: parseFloat(v) || 0 })} type="number" />
-                  <GSelect label="Categoria" value={editForm.categoria || ""} onChange={v => setEditForm({ ...editForm, categoria: v })} options={CATS_CONTAS_PAGAR} />
+                  <GSelect label="Categoria" value={editForm.categoria || ""} onChange={v => setEditForm({ ...editForm, categoria: v })} options={categorias} />
                   <GInput label="Prazo" value={editForm.prazo || ""} onChange={v => setEditForm({ ...editForm, prazo: v })} type="date" />
                 </div>
                 <div className="mt-2.5"><GInput label="Notas" value={editForm.notas || ""} onChange={v => setEditForm({ ...editForm, notas: v })} /></div>

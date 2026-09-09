@@ -46,7 +46,7 @@ function requireAuth(ctx) {
 var list_tarefas_default = defineTool({
   name: "list_tarefas",
   title: "Listar tarefas",
-  description: "Lista as tarefas do utilizador autenticado no Sistema Garcia.",
+  description: "Lista as tarefas do utilizador autenticado no My Daily Compass.",
   inputSchema: {
     apenasPendentes: z.boolean().optional().describe("Se true, retorna apenas tarefas por fazer.")
   },
@@ -211,9 +211,9 @@ Saldo: ${saldo} AOA`
 var projectRef = "xcuhgnultrudozndtimh";
 var mcp_default = defineMcp({
   name: "sistema-garcia-mcp",
-  title: "Sistema Garcia MCP",
+  title: "My Daily Compass MCP",
   version: "0.1.0",
-  instructions: "Ferramentas para o Sistema Garcia: tarefas, cobran\xE7as, neg\xF3cios (stock e receita) e finan\xE7as pessoais. Todas as ferramentas actuam apenas sobre os dados do utilizador autenticado.",
+  instructions: "Ferramentas para o My Daily Compass: tarefas, cobran\xE7as, neg\xF3cios (stock e receita) e finan\xE7as pessoais. Todas as ferramentas actuam apenas sobre os dados do utilizador autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
