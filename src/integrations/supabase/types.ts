@@ -14,6 +14,301 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          accao: string
+          actor_id: string | null
+          criado_em: string
+          detalhe: Json
+          entidade: string | null
+          id: string
+          project_id: string
+        }
+        Insert: {
+          accao: string
+          actor_id?: string | null
+          criado_em?: string
+          detalhe?: Json
+          entidade?: string | null
+          id?: string
+          project_id: string
+        }
+        Update: {
+          accao?: string
+          actor_id?: string | null
+          criado_em?: string
+          detalhe?: Json
+          entidade?: string | null
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          criado_em: string
+          email: string | null
+          id: string
+          nome: string | null
+          updated_at: string
+        }
+        Insert: {
+          criado_em?: string
+          email?: string | null
+          id: string
+          nome?: string | null
+          updated_at?: string
+        }
+        Update: {
+          criado_em?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_invites: {
+        Row: {
+          convidado_por: string
+          criado_em: string
+          email: string
+          estado: string
+          expira_em: string
+          id: string
+          papel: string
+          project_id: string
+          token: string
+        }
+        Insert: {
+          convidado_por: string
+          criado_em?: string
+          email: string
+          estado?: string
+          expira_em?: string
+          id?: string
+          papel?: string
+          project_id: string
+          token?: string
+        }
+        Update: {
+          convidado_por?: string
+          criado_em?: string
+          email?: string
+          estado?: string
+          expira_em?: string
+          id?: string
+          papel?: string
+          project_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invites_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          convidado_por: string | null
+          criado_em: string
+          id: string
+          papel: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          convidado_por?: string | null
+          criado_em?: string
+          id?: string
+          papel?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          convidado_por?: string | null
+          criado_em?: string
+          id?: string
+          papel?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          arquivado: boolean
+          criado_em: string
+          descricao: string
+          gastos_legado: number
+          icon: string
+          id: string
+          legacy_id: string | null
+          meta: number
+          nome: string
+          notas: string
+          owner_id: string
+          proximo_recebimento: string | null
+          receita_legado: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivado?: boolean
+          criado_em?: string
+          descricao?: string
+          gastos_legado?: number
+          icon?: string
+          id?: string
+          legacy_id?: string | null
+          meta?: number
+          nome: string
+          notas?: string
+          owner_id: string
+          proximo_recebimento?: string | null
+          receita_legado?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          arquivado?: boolean
+          criado_em?: string
+          descricao?: string
+          gastos_legado?: number
+          icon?: string
+          id?: string
+          legacy_id?: string | null
+          meta?: number
+          nome?: string
+          notas?: string
+          owner_id?: string
+          proximo_recebimento?: string | null
+          receita_legado?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_items: {
+        Row: {
+          criado_em: string
+          custo_unitario: number
+          id: string
+          legacy_id: string | null
+          nome: string
+          preco_venda: number
+          project_id: string
+          quantidade: number
+          updated_at: string
+        }
+        Insert: {
+          criado_em?: string
+          custo_unitario?: number
+          id?: string
+          legacy_id?: string | null
+          nome?: string
+          preco_venda?: number
+          project_id: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Update: {
+          criado_em?: string
+          custo_unitario?: number
+          id?: string
+          legacy_id?: string | null
+          nome?: string
+          preco_venda?: number
+          project_id?: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          cliente: string
+          criado_em: string
+          criado_por: string | null
+          custo: number
+          data: string
+          descricao: string
+          id: string
+          legacy_id: string | null
+          origem: string
+          project_id: string
+          qty: number
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          cliente?: string
+          criado_em?: string
+          criado_por?: string | null
+          custo?: number
+          data?: string
+          descricao?: string
+          id?: string
+          legacy_id?: string | null
+          origem?: string
+          project_id: string
+          qty?: number
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          cliente?: string
+          criado_em?: string
+          criado_por?: string | null
+          custo?: number
+          data?: string
+          descricao?: string
+          id?: string
+          legacy_id?: string | null
+          origem?: string
+          project_id?: string
+          qty?: number
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_data: {
         Row: {
           data_key: string
@@ -43,7 +338,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      e_dono_do_projecto: { Args: { p_project: string }; Returns: boolean }
+      migrar_negocios_de_user_data: {
+        Args: { p_user: string }
+        Returns: number
+      }
+      pode_editar_projecto: { Args: { p_project: string }; Returns: boolean }
+      pode_ver_projecto: { Args: { p_project: string }; Returns: boolean }
+      safe_date: { Args: { t: string }; Returns: string }
+      safe_numeric: { Args: { t: string }; Returns: number }
+      safe_timestamptz: { Args: { t: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
