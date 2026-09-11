@@ -1,1 +1,23 @@
-project_id = "xcuhgnultrudozndtimh"
+project_id = "ykcmifkgxgnjhdqsfkds"
+
+# ATENÇÃO: o `supabase config push` só escreve o que este ficheiro declarar —
+# mas o que declarar, substitui por inteiro. A autenticação deste projecto é
+# gerida pela integração Vercel↔Supabase, que já lá pôs os URLs das
+# pré-visualizações (com *). Por isso o `site_url` NÃO é declarado aqui, e a
+# lista abaixo repete os URLs da integração em vez de os apagar.
+#
+# Antes de mexer nisto: `supabase config diff --project-ref ykcmifkgxgnjhdqsfkds`.
+[auth]
+additional_redirect_urls = [
+  # postos pela integração do Vercel — manter
+  "https://glmlisboa-garcialisboamateus-7719s-projects.vercel.app/",
+  "https://glmlisboa-garcialisboamateus-7719s-projects.vercel.app/**",
+  "https://glmlisboa-*-garcialisboamateus-7719s-projects.vercel.app",
+  "https://glmlisboa-*-garcialisboamateus-7719s-projects.vercel.app/**",
+  # o endereço curto
+  "https://glmlisboa.vercel.app",
+  "https://glmlisboa.vercel.app/**",
+  # desenvolvimento local
+  "http://localhost:8080",
+  "http://localhost:8080/**",
+]
