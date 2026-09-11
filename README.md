@@ -22,7 +22,8 @@ negócio.
 - [Edge Functions](#edge-functions)
 - [Servidor MCP](#servidor-mcp)
 - [Testes](#testes)
-- [Fluxo de trabalho: local, GitHub e Lovable](#fluxo-de-trabalho-local-github-e-lovable)
+- [Planos e administração](#planos-e-administração)
+- [Publicação](#publicação)
 - [Roadmap](#roadmap)
 
 ---
@@ -215,6 +216,44 @@ Os tipos TypeScript de cada entidade (`Devedor`, `Negocio`, `StockItem`, `Tarefa
 `ContaPagar`, `Financas`, `BlocoRotina`, `AprendizadoArea`, `Configuracoes`) estão todos
 em `src/lib/garcia.ts`.
 
+## Planos e administração
+
+`profiles` guarda `plano` (`gratuito` | `pro` | `equipa` | `vitalicio`), `plano_expira_em`,
+`plano_notas` e `is_admin`.
+
+| Plano | Negócios | Colaboradores por projecto |
+|---|---|---|
+| `gratuito` | 2 | 0 |
+| `pro` | sem limite | 3 |
+| `equipa` | sem limite | 10 |
+| `vitalicio` | sem limite | 10 |
+
+Um plano pago com `plano_expira_em` no passado vale o mesmo que o gratuito. Esse cálculo
+vive numa função só — `plano_efectivo()` — para a app e a base de dados nunca discordarem
+sobre quem pode o quê.
+
+**Os limites são verificados por trigger, não no ecrã.** Verificar no cliente não protege
+nada quando a chave é pública e qualquer pessoa pode fazer o pedido à mão. Os triggers
+deixam passar quando `auth.uid()` é nulo, senão uma sincronização do lado do servidor
+parava a meio ao repor mais negócios do que o plano permite.
+
+### Porque é que ninguém se pode promover a si próprio
+
+Existia uma política que deixava cada utilizador escrever na sua própria linha de
+`profiles`. Ao pôr ali `plano` e `is_admin`, qualquer pessoa se dava a si própria acesso
+vitalício — ou direitos de administrador — com um pedido feito do browser.
+
+O RLS decide linhas, não colunas. A restrição por coluna faz-se com `GRANT`:
+
+```sql
+REVOKE UPDATE ON public.profiles FROM authenticated, anon;
+GRANT  UPDATE (nome) ON public.profiles TO authenticated;
+```
+
+Planos mudam-se apenas por `definir_plano()`, que verifica quem chama. **Não há função
+para dar direitos de administrador** — isso faz-se na consola SQL. Um administrador que
+se possa criar a partir da app é um administrador que qualquer pessoa pode criar.
+
 ## Edge Functions
 
 ### `gerar-rotina`
@@ -279,24 +318,46 @@ Vitest com ambiente jsdom, setup em `src/test/setup.ts`. A cobertura é ainda pe
 `src/test/log.test.ts` cobre o registo de transações (regressão da truncagem de
 histórico). Os cálculos de saldo, lucro e margem são o próximo alvo natural.
 
-## Fluxo de trabalho: local, GitHub e Lovable
+## Publicação
 
-Este repositório está ligado ao Lovable através do GitHub, com sincronização nos dois
-sentidos:
+O BIZ é publicado no **Vercel** a partir do `main`. Cada push gera uma publicação nova;
+os *commits* fora do `main` geram pré-visualizações com o seu próprio endereço.
 
 ```
-edição local → git commit → git push origin main → Lovable puxa → editor e site actualizados
-edição no Lovable → commit automático → git pull (local)
+git push origin main  →  Vercel constrói  →  glmlisboa.vercel.app
 ```
 
-Regras práticas:
+Duas coisas que já morderam e convém saber:
 
-1. **Fazer sempre `git pull` antes de começar** a trabalhar localmente.
-2. **Uma alteração local só chega ao Lovable depois do `push`.** Guardar o ficheiro não
-   chega.
-3. **Não editar nos dois lados ao mesmo tempo** — dá conflito de merge.
-4. Alterações a `supabase/migrations/` e às Edge Functions viajam no repositório, mas
-   confirmar sempre no painel do Supabase se a migração foi de facto aplicada.
+**O autor do commit tem de corresponder à conta.** Em contas Hobby, o Vercel bloqueia a
+publicação se não conseguir associar o email do autor — ou de um co-autor — a uma conta
+com acesso, e queixa-se de "collaboration not supported". Se aparecer isso, confirmar
+`git config user.email`.
+
+**Migrações não viajam com o código.** O `git push` leva os ficheiros SQL, não os aplica.
+Aplicar com o CLI, que fala directamente com o projecto ligado:
+
+```bash
+npx supabase db push          # aplica as migrações que faltarem
+npx supabase db query --linked "SELECT ..."   # consultar a base de dados remota
+npx supabase functions deploy # publicar as Edge Functions
+```
+
+> **Antes de `supabase config push`**, correr sempre `supabase config diff`. O `push`
+> substitui por inteiro o que o `config.toml` declarar, e a integração Vercel↔Supabase
+> gere ali definições — já quase apagámos os URLs das pré-visualizações por causa disto.
+
+### O plugin do Lovable corrompe o bundle MCP em Windows
+
+Correr `npm run dev` ou `npm run build` reescreve `supabase/functions/mcp/index.ts` com
+um esboço que tem um caminho absoluto do Windows lá dentro, o que parte a função em
+produção. Antes de cada commit:
+
+```bash
+git diff --stat supabase/functions/mcp/index.ts
+```
+
+Se aparecerem centenas de linhas removidas, é isto — `git checkout --` nesse ficheiro.
 
 ## Roadmap
 
@@ -316,4 +377,5 @@ Direcção do produto: passar de ferramenta pessoal a serviço para pequenos emp
       falta adaptar a app e construir os convites e o feed de actividade
 - [ ] **Leitura de facturas por fotografia** — extrair valor, data e fornecedor
 - [ ] **Assistente de IA de negócio** — para além da rotina, ajudar a estruturar a ideia
-- [ ] **Planos** — nível gratuito e subscrição paga
+- [~] **Planos** — planos, limites com dentes e ecrã de administração feitos; falta a
+      cobrança e a ligação a um meio de pagamento
