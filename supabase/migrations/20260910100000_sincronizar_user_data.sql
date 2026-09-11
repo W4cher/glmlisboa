@@ -185,6 +185,27 @@ END;
 $$;
 
 
+-- ─── Fechar as funções de migração ao cliente ───────────────────────────────
+--
+-- Estas funções são SECURITY DEFINER e escrevem na base de dados. Por defeito o
+-- Postgres dá EXECUTE a PUBLIC, o que as deixava chamáveis por qualquer pessoa
+-- com a chave publishable — que é pública por natureza — e para qualquer
+-- user_id à escolha. Não expõem dados de terceiros (devolvem contagens), mas
+-- disparar escritas na conta de outro utilizador não é coisa que deva estar ao
+-- alcance do browser.
+--
+-- São ferramentas de manutenção: correm nas migrações e na consola SQL, onde a
+-- ligação já é privilegiada. Ninguém as precisa de chamar a partir da app.
+--
+-- NOTA: as três funções de acesso — pode_ver_projecto, pode_editar_projecto e
+-- e_dono_do_projecto — NÃO podem ser revogadas. São avaliadas dentro das
+-- políticas RLS com o papel de quem faz a consulta, e sem EXECUTE o acesso às
+-- tabelas deixava de funcionar.
+
+REVOKE ALL ON FUNCTION public.migrar_negocios_de_user_data(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sincronizar_negocios_de_user_data(uuid) FROM PUBLIC, anon, authenticated;
+
+
 -- ─── Correr agora para todos ────────────────────────────────────────────────
 -- Apanha tudo o que foi registado desde a migração inicial. Deve voltar a
 -- correr-se imediatamente antes de a app passar a ler das tabelas.
