@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       activity_log: {
@@ -57,21 +82,33 @@ export type Database = {
           criado_em: string
           email: string | null
           id: string
+          is_admin: boolean
           nome: string | null
+          plano: string
+          plano_expira_em: string | null
+          plano_notas: string
           updated_at: string
         }
         Insert: {
           criado_em?: string
           email?: string | null
           id: string
+          is_admin?: boolean
           nome?: string | null
+          plano?: string
+          plano_expira_em?: string | null
+          plano_notas?: string
           updated_at?: string
         }
         Update: {
           criado_em?: string
           email?: string | null
           id?: string
+          is_admin?: boolean
           nome?: string | null
+          plano?: string
+          plano_expira_em?: string | null
+          plano_notas?: string
           updated_at?: string
         }
         Relationships: []
@@ -338,16 +375,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      definir_plano: {
+        Args: {
+          p_expira?: string
+          p_notas?: string
+          p_plano: string
+          p_user: string
+        }
+        Returns: undefined
+      }
       e_dono_do_projecto: { Args: { p_project: string }; Returns: boolean }
+      limite_colaboradores: { Args: { p_plano: string }; Returns: number }
+      limite_projectos: { Args: { p_plano: string }; Returns: number }
       migrar_negocios_de_user_data: {
         Args: { p_user: string }
         Returns: number
       }
+      plano_efectivo: { Args: { p_user: string }; Returns: string }
       pode_editar_projecto: { Args: { p_project: string }; Returns: boolean }
       pode_ver_projecto: { Args: { p_project: string }; Returns: boolean }
       safe_date: { Args: { t: string }; Returns: string }
       safe_numeric: { Args: { t: string }; Returns: number }
       safe_timestamptz: { Args: { t: string }; Returns: string }
+      sincronizar_negocios_de_user_data: {
+        Args: { p_user: string }
+        Returns: {
+          projectos_novos: number
+          stock_novo: number
+          transacoes_novas: number
+        }[]
+      }
+      sou_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -476,6 +534,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

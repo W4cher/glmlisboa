@@ -16,11 +16,13 @@ import TabNegocios from "@/components/garcia/TabNegocios";
 import TabAprendizado from "@/components/garcia/TabAprendizado";
 import TabFinancas from "@/components/garcia/TabFinancas";
 import TabConfig from "@/components/garcia/TabConfig";
+import TabAdmin from "@/components/garcia/TabAdmin";
+import { souAdmin } from "@/lib/admin";
 import AuthPage from "@/pages/Auth";
 import { notify } from "@/lib/notifications";
 import {
   Clock, CheckSquare, Wallet, Receipt, BarChart3, GraduationCap, CreditCard, Settings,
-  Eye, EyeOff, type LucideIcon,
+  Eye, EyeOff, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 
 const TABS: { id: string; icon: LucideIcon; label: string }[] = [
@@ -52,6 +54,7 @@ export default function Index() {
   const [config, setConfig] = useState<Configuracoes>(DEFAULT_CONFIG);
   const [valoresVisiveis, setValoresVisiveis] = useState(true);
   const [precisaOnboarding, setPrecisaOnboarding] = useState(false);
+  const [admin, setAdmin] = useState(false);
 
   const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const debouncedSave = useCallback((key: string, val: any) => {
@@ -66,6 +69,11 @@ export default function Index() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) { setAdmin(false); return; }
+    souAdmin().then(setAdmin);
+  }, [user]);
 
   useEffect(() => {
     if (!user) { setLoaded(false); return; }
@@ -155,6 +163,7 @@ export default function Index() {
     setBlocos(dados.blocos);
     setConfig(prev => ({ ...prev, nome: dados.nome, moeda: dados.moeda, onboardingCompleto: true }));
     setPrecisaOnboarding(false);
+    setAdmin(false);
     setTab(dados.negociosCfg.length > 0 ? "negocios" : "rotina");
   };
 
@@ -219,7 +228,7 @@ export default function Index() {
       </div>
 
       <div className="flex overflow-x-auto bg-card border-b border-border px-2 sm:px-3">
-        {TABS.map(t => {
+        {(admin ? [...TABS, { id: "admin", icon: ShieldCheck, label: "Admin" }] : TABS).map(t => {
           const TIcon = t.icon;
           const active = tab === t.id;
           return (
@@ -245,6 +254,7 @@ export default function Index() {
         {tab === "aprendizado" && <TabAprendizado areas={aprendizado} setAreas={setAprendizado} />}
         {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} ocultarValores={ocultar} config={config} />}
         {tab === "config" && <TabConfig config={config} setConfig={setConfig} onLogout={handleLogout} />}
+        {tab === "admin" && admin && <TabAdmin />}
       </div>
     </div>
     </MoedaCtx.Provider>
