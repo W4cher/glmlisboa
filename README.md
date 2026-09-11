@@ -1,4 +1,4 @@
-# My Daily Compass
+# BIZ
 
 Aplicação web de **gestão pessoal e de pequenos negócios**, em português, pensada para
 quem toca vários negócios ao mesmo tempo e precisa de ver tudo num único sítio: a rotina

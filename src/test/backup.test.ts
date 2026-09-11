@@ -5,7 +5,7 @@ import { validarBackup, VERSAO_BACKUP } from "@/lib/backup";
 
 const valido = {
   versao: VERSAO_BACKUP,
-  app: "My Daily Compass",
+  app: "BIZ",
   exportadoEm: "2026-09-09T10:00:00.000Z",
   chaves: { "garcia:tarefas": [], "garcia:config": { nome: "Ana" } },
 };

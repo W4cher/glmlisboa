@@ -5,7 +5,7 @@ import { loadKey, requireAuth } from "../supabase";
 export default defineTool({
   name: "list_tarefas",
   title: "Listar tarefas",
-  description: "Lista as tarefas do utilizador autenticado no My Daily Compass.",
+  description: "Lista as tarefas do utilizador autenticado no BIZ.",
   inputSchema: {
     apenasPendentes: z.boolean().optional().describe("Se true, retorna apenas tarefas por fazer."),
   },

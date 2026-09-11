@@ -113,7 +113,7 @@ export default function OAuthConsent() {
           Ligar <span className="text-primary">{clientName}</span> à tua conta
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-4">
-          Isto permite que {clientName} use as ferramentas do My Daily Compass como tu — a ler tarefas, cobranças, negócios e finanças da tua conta.
+          Isto permite que {clientName} use as ferramentas do BIZ como tu — a ler tarefas, cobranças, negócios e finanças da tua conta.
         </p>
         {scopes.length > 0 && (
           <div className="bg-garcia-surface-hi border border-border rounded-lg p-3 mb-4 text-xs">

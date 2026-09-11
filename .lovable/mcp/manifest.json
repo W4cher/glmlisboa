@@ -13,13 +13,13 @@
     "server": {
       "name": "sistema-garcia-mcp",
       "version": "0.1.0",
-      "title": "My Daily Compass MCP"
+      "title": "BIZ MCP"
     },
     "tools": [
       {
         "name": "list_tarefas",
         "title": "Listar tarefas",
-        "description": "Lista as tarefas do utilizador autenticado no My Daily Compass.",
+        "description": "Lista as tarefas do utilizador autenticado no BIZ.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

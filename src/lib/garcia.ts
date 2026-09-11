@@ -133,7 +133,7 @@ export const save = async <T>(key: string, val: T) => {
 };
 
 // ── Constants ──
-export const APP_NAME = "My Daily Compass";
+export const APP_NAME = "BIZ";
 
 export const PRIORIDADES = ["Urgente", "Importante", "Normal"];
 

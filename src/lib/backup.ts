@@ -46,7 +46,7 @@ export function descarregarBackup(b: Backup) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `my-daily-compass-${b.exportadoEm.slice(0, 10)}.json`;
+  a.download = `biz-${b.exportadoEm.slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
