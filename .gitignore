@@ -25,3 +25,8 @@ dist-ssr
 
 # Supabase CLI
 supabase/.temp
+
+# Credenciais: ficam no painel do Vercel, não no repositório
+.env
+.env.local
+.env.*.local
