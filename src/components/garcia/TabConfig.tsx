@@ -248,8 +248,13 @@ export default function TabConfig({ config, setConfig, onLogout }: Props) {
         descricao={
           porImportar
             ? `O ficheiro tem ${Object.keys(porImportar.chaves).length} secções` +
+              (porImportar.projectos ? ` e ${porImportar.projectos.length} negócios` : "") +
               (porImportar.exportadoEm ? `, de ${porImportar.exportadoEm.slice(0, 10)}` : "") +
-              ". As secções que existirem nesta conta são substituídas pelas do ficheiro. Não há como desfazer — exporta primeiro se tiveres dúvidas."
+              ". As secções desta conta são substituídas pelas do ficheiro" +
+              (porImportar.projectos
+                ? ", e os negócios que aqui existem são APAGADOS e recriados a partir do ficheiro — com as vendas e o stock."
+                : ".") +
+              " Não há como desfazer: exporta primeiro se tiveres dúvidas."
             : ""
         }
         textoConfirmar={aImportar ? "A importar..." : "Importar"}

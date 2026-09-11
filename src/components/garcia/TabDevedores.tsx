@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Devedor, Negocio, NegocioCfg, LogEntry, uid, today } from "@/lib/garcia";
+import { Devedor, Negocio, NegocioCfg, uid, today } from "@/lib/garcia";
+import { registarTransaccao } from "@/lib/projectos";
+import { toast } from "sonner";
 import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, GSelect, GBtn, StatCard, Empty } from "./SharedComponents";
 import { Wallet, CreditCard, Trash2, Pencil, Check, X, AlertTriangle, Briefcase } from "lucide-react";
@@ -8,12 +10,13 @@ interface Props {
   devedores: Devedor[];
   setDevedores: (v: Devedor[] | ((prev: Devedor[]) => Devedor[])) => void;
   negocios: Record<string, Negocio>;
-  setNegocios: (v: Record<string, Negocio> | ((prev: Record<string, Negocio>) => Record<string, Negocio>)) => void;
   negociosCfg: NegocioCfg[];
+  /** Volta a ler os negócios das tabelas, depois de registar o pagamento. */
+  recarregarProjectos: () => Promise<void>;
   ocultarValores?: boolean;
 }
 
-export default function TabDevedores({ devedores, setDevedores, negocios, setNegocios, negociosCfg, ocultarValores = false }: Props) {
+export default function TabDevedores({ devedores, setDevedores, negocios, negociosCfg, recarregarProjectos, ocultarValores = false }: Props) {
   const fmt = useFmt();
   const fmtMasked = useFmtMasked();
   const simbolo = useSimbolo();
@@ -69,26 +72,25 @@ export default function TabDevedores({ devedores, setDevedores, negocios, setNeg
       pagamentos: [...(d.pagamentos || []), novoPagamento],
     } : d));
 
-    if (devedor.negocio && devedor.negocio !== "outro") {
-      const entrada: LogEntry = {
-        id: uid(), tipo: "venda", negocio: devedor.negocio,
+    // O pagamento de uma dívida também é receita do negócio a que estava
+    // associada. Fica marcado com origem "divida" para se distinguir de uma
+    // venda feita ao balcão.
+    if (devedor.negocio && devedor.negocio !== "outro" && negocios[devedor.negocio]) {
+      registarTransaccao({
+        projectId: devedor.negocio,
+        tipo: "venda",
         descricao: `Pagamento dívida — ${devedor.nome}${devedor.produto ? ` (${devedor.produto})` : ""}`,
-        valor: montante, custo: 0, lucroVenda: montante,
-        cliente: devedor.nome, qty: 1, data: today(),
-        registadoEm: new Date().toISOString(),
-      };
-      setNegocios(prev => {
-        const current = prev[devedor.negocio];
-        if (!current) return prev;
-        return {
-          ...prev,
-          [devedor.negocio]: {
-            ...current,
-            receita: (current.receita || 0) + montante,
-            log: [...(current.log || []), entrada],
-          }
-        };
-      });
+        valor: montante,
+        custo: 0,
+        cliente: devedor.nome,
+        qty: 1,
+        data: today(),
+        origem: "divida",
+      })
+        .then(recarregarProjectos)
+        .catch(e => toast.error(
+          e instanceof Error ? e.message : "O pagamento foi registado, mas não entrou no negócio"
+        ));
     }
 
     setPagandoId(null);

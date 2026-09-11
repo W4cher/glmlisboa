@@ -18,6 +18,8 @@ import TabFinancas from "@/components/garcia/TabFinancas";
 import TabConfig from "@/components/garcia/TabConfig";
 import TabAdmin from "@/components/garcia/TabAdmin";
 import { souAdmin } from "@/lib/admin";
+import { carregarProjectos, criarProjecto } from "@/lib/projectos";
+import { toast } from "sonner";
 import AuthPage from "@/pages/Auth";
 import { notify } from "@/lib/notifications";
 import {
@@ -78,11 +80,13 @@ export default function Index() {
   useEffect(() => {
     if (!user) { setLoaded(false); return; }
     (async () => {
-      const [d, cp, n, nc, ap, tk, rd, bl, fi, cfg] = await Promise.all([
+      const [d, cp, proj, ap, tk, rd, bl, fi, cfg] = await Promise.all([
         load<Devedor[]>("garcia:devedores"),
         load<ContaPagar[]>("garcia:contaspagar"),
-        load<Record<string, Negocio>>("garcia:negocios"),
-        load<NegocioCfg[]>("garcia:negocios_cfg"),
+        carregarProjectos().catch(e => {
+          console.error("Não foi possível carregar os negócios:", e);
+          return { cfg: [] as NegocioCfg[], negocios: {} as Record<string, Negocio> };
+        }),
         load<AprendizadoArea[]>("garcia:aprendizado"),
         load<Tarefa[]>("garcia:tarefas"),
         load<Record<string, Record<string, boolean>>>("garcia:rotina"),
@@ -92,8 +96,8 @@ export default function Index() {
       ]);
       if (d) setDevedores(d);
       if (cp) setContasPagar(cp);
-      if (n) setNegocios(n);
-      if (nc) setNegociosCfg(nc);
+      setNegocios(proj.negocios);
+      setNegociosCfg(proj.cfg);
       if (ap) setAprendizado(ap);
       if (tk) setTarefas(tk);
       if (rd) setRotinaDia(rd);
@@ -108,8 +112,7 @@ export default function Index() {
       // nenhuns — assim as contas que já existiam antes do onboarding entram
       // directamente na app, sem perder nada.
       const temDados = !!(
-        nc?.length || bl?.length || tk?.length || d?.length || cp?.length ||
-        (n && Object.keys(n).length) || cfg?.nome
+        proj.cfg.length || bl?.length || tk?.length || d?.length || cp?.length || cfg?.nome
       );
       setPrecisaOnboarding(!cfg?.onboardingCompleto && !temDados);
 
@@ -118,8 +121,6 @@ export default function Index() {
   }, [user]);
 
   useEffect(() => { if (loaded) debouncedSave("garcia:devedores", devedores); }, [devedores, loaded, debouncedSave]);
-  useEffect(() => { if (loaded) debouncedSave("garcia:negocios", negocios); }, [negocios, loaded, debouncedSave]);
-  useEffect(() => { if (loaded) debouncedSave("garcia:negocios_cfg", negociosCfg); }, [negociosCfg, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:aprendizado", aprendizado); }, [aprendizado, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:tarefas", tarefas); }, [tarefas, loaded, debouncedSave]);
   useEffect(() => { if (loaded) debouncedSave("garcia:rotina", rotinaDia); }, [rotinaDia, loaded, debouncedSave]);
@@ -157,9 +158,24 @@ export default function Index() {
     }
   }, [loaded, config.notificacoesAtivas, tarefas, devedores]);
 
+  /** Volta a ler os negócios das tabelas. Chamado depois de cada alteração. */
+  const recarregarProjectos = useCallback(async () => {
+    try {
+      const p = await carregarProjectos();
+      setNegociosCfg(p.cfg);
+      setNegocios(p.negocios);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível actualizar os negócios");
+    }
+  }, []);
+
   const concluirOnboarding = (dados: DadosOnboarding) => {
-    setNegociosCfg(dados.negociosCfg);
-    setNegocios(dados.negocios);
+    // Os negócios escolhidos no assistente passam a ser linhas na tabela.
+    Promise.all(dados.negociosCfg.map(c =>
+      criarProjecto({ nome: c.nome, desc: c.desc, icon: c.icon, tipo: c.tipo })
+    ))
+      .then(recarregarProjectos)
+      .catch(e => toast.error(e instanceof Error ? e.message : "Não foi possível criar os negócios"));
     setBlocos(dados.blocos);
     setConfig(prev => ({ ...prev, nome: dados.nome, moeda: dados.moeda, onboardingCompleto: true }));
     setPrecisaOnboarding(false);
@@ -248,9 +264,9 @@ export default function Index() {
       <div className="max-w-[900px] mx-auto p-3 sm:p-5">
         {tab === "rotina" && <TabRotina rotinaDia={rotinaDia} setRotinaDia={setRotinaDia} blocos={blocos} setBlocos={setBlocos} nome={config.nome} />}
         {tab === "tarefas" && <TabTarefas tarefas={tarefas} setTarefas={setTarefas} config={config} />}
-        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} ocultarValores={ocultar} />}
+        {tab === "devedores" && <TabDevedores devedores={devedores} setDevedores={setDevedores} negocios={negocios} negociosCfg={negociosCfg} recarregarProjectos={recarregarProjectos} ocultarValores={ocultar} />}
         {tab === "contaspagar" && <TabContasPagar contas={contasPagar} setContas={setContasPagar} ocultarValores={ocultar} config={config} />}
-        {tab === "negocios" && <TabNegocios negocios={negocios} setNegocios={setNegocios} negociosCfg={negociosCfg} setNegociosCfg={setNegociosCfg} ocultarValores={ocultar} />}
+        {tab === "negocios" && <TabNegocios negocios={negocios} negociosCfg={negociosCfg} recarregarProjectos={recarregarProjectos} ocultarValores={ocultar} />}
         {tab === "aprendizado" && <TabAprendizado areas={aprendizado} setAreas={setAprendizado} />}
         {tab === "finanas" && <TabFinancas finanas={finanas} setFinanas={setFinanas} ocultarValores={ocultar} config={config} />}
         {tab === "config" && <TabConfig config={config} setConfig={setConfig} onLogout={handleLogout} />}

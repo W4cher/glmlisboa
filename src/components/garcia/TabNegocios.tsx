@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Negocio, NegocioCfg, LogEntry, StockItem, logOrdenado, LOG_VISIVEL_INICIAL, negocioVazio, uid, today } from "@/lib/garcia";
+import { Negocio, NegocioCfg, StockItem, logOrdenado, LOG_VISIVEL_INICIAL, today } from "@/lib/garcia";
+import {
+  criarProjecto, apagarProjecto, actualizarProjecto,
+  registarTransaccao, apagarTransaccao,
+  criarItemStock, actualizarItemStock, apagarItemStock, venderDoStock,
+} from "@/lib/projectos";
+import { toast } from "sonner";
 import { useFmt, useFmtMasked, useSimbolo } from "@/lib/moeda";
 import { SectionHeader, GCard, GInput, NumInput, GBtn, StatCard } from "./SharedComponents";
 import NegocioForm from "./NegocioForm";
@@ -10,13 +16,13 @@ import { BarChart3, TrendingUp, TrendingDown, Trash2, Plus } from "lucide-react"
 
 interface Props {
   negocios: Record<string, Negocio>;
-  setNegocios: (v: Record<string, Negocio> | ((prev: Record<string, Negocio>) => Record<string, Negocio>)) => void;
   negociosCfg: NegocioCfg[];
-  setNegociosCfg: (v: NegocioCfg[] | ((prev: NegocioCfg[]) => NegocioCfg[])) => void;
+  /** Volta a ler tudo das tabelas. Chamar depois de cada alteração. */
+  recarregarProjectos: () => Promise<void>;
   ocultarValores?: boolean;
 }
 
-export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNegociosCfg, ocultarValores = false }: Props) {
+export default function TabNegocios({ negocios, negociosCfg, recarregarProjectos, ocultarValores = false }: Props) {
   const fmt = useFmt();
   const fmtMasked = useFmtMasked();
   const simbolo = useSimbolo();
@@ -27,105 +33,97 @@ export default function TabNegocios({ negocios, setNegocios, negociosCfg, setNeg
   const [form, setForm] = useState({ descricao: "", valor: "", custo: "", qty: "1", cliente: "", data: today() });
   const [verTudoLog, setVerTudoLog] = useState(false);
   const [negocioAApagar, setNegocioAApagar] = useState<string | null>(null);
+  const [aGravar, setAGravar] = useState(false);
+
+  /**
+   * Corre a operação contra a base de dados e volta a ler. Sem interface
+   * optimista de propósito: com duas pessoas no mesmo negócio, mostrar já o
+   * resultado e só depois descobrir que falhou seria pior do que esperar.
+   */
+  const gravar = async (op: () => Promise<unknown>, sucesso?: string) => {
+    setAGravar(true);
+    try {
+      await op();
+      await recarregarProjectos();
+      if (sucesso) toast.success(sucesso);
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gravar");
+      return false;
+    } finally {
+      setAGravar(false);
+    }
+  };
 
   const n = negocios[sel] || { receita: 0, gastos: 0, meta: 0, notas: "", log: [], stock: [] } as Negocio;
 
-  const registar = () => {
+  const registar = async () => {
     if (!form.descricao || !form.valor) return;
     const qty = parseInt(form.qty) || 1;
     const valorTotal = parseFloat(form.valor) * qty;
     const custoTotal = parseFloat(form.custo || "0") * qty;
 
-    const entrada: LogEntry = {
-      id: uid(), tipo, negocio: sel,
-      descricao: form.descricao, valor: valorTotal,
+    const ok = await gravar(() => registarTransaccao({
+      projectId: sel,
+      tipo,
+      descricao: form.descricao,
+      valor: valorTotal,
       custo: tipo === "venda" ? custoTotal : 0,
-      lucroVenda: tipo === "venda" ? valorTotal - custoTotal : 0,
-      cliente: form.cliente, qty, data: form.data,
-      registadoEm: new Date().toISOString(),
-    };
-
-    const novaReceita = tipo === "venda" ? n.receita + valorTotal : n.receita;
-    const novosGastos = tipo === "venda" ? n.gastos + custoTotal : n.gastos + valorTotal;
-
-    setNegocios(prev => {
-      const currentLog = [...(prev[sel]?.log || []), entrada];
-      return {
-        ...prev,
-        [sel]: { ...prev[sel], receita: novaReceita, gastos: novosGastos, log: currentLog }
-      };
-    });
-
-    setForm({ descricao: "", valor: "", custo: "", qty: "1", cliente: "", data: today() });
-    setShowForm(false);
-  };
-
-  const delEntrada = (id: string) => {
-    setNegocios(prev => ({
-      ...prev,
-      [sel]: { ...prev[sel], log: (prev[sel]?.log || []).filter(e => e.id !== id) }
+      cliente: form.cliente,
+      qty,
+      data: form.data,
     }));
+
+    if (ok) {
+      setForm({ descricao: "", valor: "", custo: "", qty: "1", cliente: "", data: today() });
+      setShowForm(false);
+    }
   };
 
-  const upd = (field: string, val: number | string) => setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], [field]: val } }));
+  const delEntrada = (id: string) => { void gravar(() => apagarTransaccao(id)); };
 
-  const addNegocio = (cfg: NegocioCfg) => {
-    setNegociosCfg(prev => [...prev, cfg]);
-    setNegocios(prev => ({ ...prev, [cfg.id]: negocioVazio() }));
-    setSel(cfg.id);
-    setShowAddNeg(false);
+  const upd = (field: "meta" | "notas" | "proxima", val: number | string) => {
+    void gravar(() => actualizarProjecto(sel, { [field]: val } as Parameters<typeof actualizarProjecto>[1]));
   };
 
-  const confirmarApagarNegocio = () => {
+  const addNegocio = async (cfg: NegocioCfg) => {
+    setAGravar(true);
+    try {
+      const id = await criarProjecto({ nome: cfg.nome, desc: cfg.desc, icon: cfg.icon, tipo: cfg.tipo });
+      await recarregarProjectos();
+      setSel(id);
+      setShowAddNeg(false);
+    } catch (e) {
+      // O limite do plano é imposto pela base de dados; a mensagem vem de lá.
+      toast.error(e instanceof Error ? e.message : "Não foi possível criar o negócio");
+    } finally {
+      setAGravar(false);
+    }
+  };
+
+  const confirmarApagarNegocio = async () => {
     const id = negocioAApagar;
     if (!id) return;
     setNegocioAApagar(null);
-    setNegociosCfg(prev => prev.filter(n => n.id !== id));
-    setNegocios(prev => {
-      const copy = { ...prev };
-      delete copy[id];
-      return copy;
-    });
-    if (sel === id) setSel(negociosCfg.find(x => x.id !== id)?.id || "");
+    const ok = await gravar(() => apagarProjecto(id), "Negócio apagado");
+    if (ok && sel === id) setSel(negociosCfg.find(x => x.id !== id)?.id || "");
   };
 
   const addStock = (item: StockItem) => {
-    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: [...(prev[sel]?.stock || []), item] } }));
+    void gravar(() => criarItemStock(sel, item));
   };
   const updateStock = (itemId: string, updates: Partial<StockItem>) => {
-    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).map(s => s.id === itemId ? { ...s, ...updates } : s) } }));
+    void gravar(() => actualizarItemStock(itemId, updates));
   };
   const delStock = (itemId: string) => {
-    setNegocios(prev => ({ ...prev, [sel]: { ...prev[sel], stock: (prev[sel]?.stock || []).filter(s => s.id !== itemId) } }));
+    void gravar(() => apagarItemStock(itemId));
   };
   const venderStock = (item: StockItem, qty: number) => {
-    if (qty <= 0 || qty > item.quantidade) return;
-    const valorVenda = item.precoVenda * qty;
-    const custoVenda = item.custoUnitario * qty;
-    const entrada: LogEntry = {
-      id: uid(), tipo: "venda", negocio: sel,
-      descricao: `${item.nome} (stock)`, valor: valorVenda,
-      custo: custoVenda, lucroVenda: valorVenda - custoVenda,
-      cliente: "", qty, data: today(),
-      registadoEm: new Date().toISOString(),
-    };
-    setNegocios(prev => {
-      const current = prev[sel];
-      const newStock = (current?.stock || []).map(s =>
-        s.id === item.id ? { ...s, quantidade: s.quantidade - qty } : s
-      ).filter(s => s.quantidade > 0);
-      const currentLog = [...(current?.log || []), entrada];
-      return {
-        ...prev,
-        [sel]: {
-          ...current,
-          receita: (current?.receita || 0) + valorVenda,
-          gastos: (current?.gastos || 0) + custoVenda,
-          stock: newStock,
-          log: currentLog,
-        }
-      };
-    });
+    // A validação a sério é da base de dados: `vender_stock` trava a linha,
+    // confirma a quantidade e regista a venda numa transacção só. Aqui só se
+    // evita o pedido obviamente inútil.
+    if (qty <= 0) return;
+    void gravar(() => venderDoStock(item.id, qty));
   };
 
   const lucro = n.receita - n.gastos;

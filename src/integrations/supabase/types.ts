@@ -406,6 +406,7 @@ export type Database = {
         }[]
       }
       sou_admin: { Args: never; Returns: boolean }
+      vender_stock: { Args: { p_item: string; p_qty: number }; Returns: string }
     }
     Enums: {
       [_ in never]: never
